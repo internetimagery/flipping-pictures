@@ -101,6 +101,7 @@ var buildSlider = function(parent, data){
 // START!
 jQuery(document).ready(function($) {
 	frameSize = 500; // Max size of the frame
+	alert("here");
 
 	// Set up vimeo player when ready
 	var playerID = $("#player")[0];
