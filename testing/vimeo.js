@@ -106,6 +106,7 @@ jQuery(document).ready(function($) {
 	var playerID = $("#player")[0];
 	$f(playerID).addEvent("ready", function(event, element){
 		froogaloop = $f(playerID);
+		alert("video loaded");
 		froogaloop.api('getDuration', function (value, player_id) {
 			videoDuration = value;
 			buildSlider($("#slider>tbody>tr"), cols);
