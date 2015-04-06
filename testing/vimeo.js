@@ -5,11 +5,12 @@ shotInfo = {};
 
 // Remove a collumn
 var removeCol = function(e){
-	var half, prev, next, element;
+	var half, prev, next, element, id;
 
 	slider.colResizable({disable: true}); // Deactivate slider temporarally
 
 	element = $(this).parent("td");
+	id = element.attr('id');
 
 	half = $(element).css("width").match(/[\d\.]+/) * 0.5;
 	prev = $(element).prev();
@@ -17,6 +18,7 @@ var removeCol = function(e){
 
 	// Remove collumn
 	$(element).remove();
+	delete shotInfo[id];
 	prev.css("width", prev.css("width") + half + "px");
 	next.css("width", next.css("width") + half + "px");
 	activateSlider();
