@@ -1,0 +1,14 @@
+{
+  "name": "vimeo-player-api",
+  "homepage": "https://github.com/vimeo/player-api",
+  "_release": "f433dfe164",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "f433dfe16446b10925c0d907c987257c12ef86f7"
+  },
+  "_source": "git://github.com/vimeo/player-api.git",
+  "_target": "*",
+  "_originalSource": "vimeo-player-api",
+  "_direct": true
+}

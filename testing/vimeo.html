@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Vimeo player test</title>
+	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css"></link>
+	<style>
+		#slider{
+			height: 30px;
+			width: 500px;
+			background: lightgrey;
+			text-align: center;
+		}
+		#slider span{
+			cursor:pointer;
+		}
+		.grip{
+			width: 20px;
+			height: 20px;
+			background: lightgrey;
+			border: 1px solid black;
+			margin-top: 20px;
+			border-radius: 20px;
+			margin-left: -5px;
+			cursor:col-resize;
+		}
+		#barrier{
+			width: 500px;
+			height: 350px;
+			background: black;
+			position: absolute;
+			top: 0px;
+			left: 0px;
+		}
+	</style>
+</head>
+<body>
+	<iframe
+		id="player"
+		src="https://player.vimeo.com/video/116549926?api=1&player_id=player"
+		width="500"
+		height="281"
+		frameborder="0"
+		webkitallowfullscreen
+		mozallowfullscreen
+		allowfullscreen
+		>
+	</iframe>
+	<table id="slider">
+		<tbody>
+			<tr>
+			</tr>
+		</tbody>
+	</table>
+
+	<script type="text/javascript" src="../bower_components/jquery/dist/jquery.js"></script>
+	<script type="text/javascript" src="../vendor/colResizable/source/colResizable-1.5.source.js"></script>
+	<script type="text/javascript" src="../bower_components/vimeo-player-api/javascript/froogaloop.js"></script>
+	<script src="vimeo.js" type="text/javascript" charset="utf-8"></script>
+</body>
+</html>

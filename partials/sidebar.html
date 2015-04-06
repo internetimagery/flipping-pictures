@@ -1,0 +1,9 @@
+<ul class="nav" ng-controller="navigation">
+    <li class="btn-default"ng-repeat="nav in navs" ng-class="{ active: $index == active }">
+		<a
+			ng-click="select($index)"
+			>
+				<i class="fa fa-fw {{nav.icon}}"></i> {{nav.name}}
+		</a>
+		</li>
+</ul>
