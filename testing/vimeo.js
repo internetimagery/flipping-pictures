@@ -105,10 +105,8 @@ jQuery(document).ready(function($) {
 	// Set up vimeo player when ready
 	var playerID = $("#player")[0];
 	$f(playerID).addEvent("ready", function(event, element){
-		alert("event");
 		froogaloop = $f(playerID);
 		froogaloop.api('getDuration', function (value, player_id) {
-			alert("duration");
 			videoDuration = value;
 			buildSlider($("#slider>tbody>tr"), cols);
 		});
