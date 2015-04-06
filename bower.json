@@ -24,6 +24,7 @@
     "pouchdb": "~3.3.1",
     "angular-pouchdb": "~1.0.2",
     "vimeo-player-api": "*",
-    "jquery-ui": "~1.11.4"
+    "jquery-ui": "~1.11.4",
+    "underscore": "~1.8.3"
   }
 }

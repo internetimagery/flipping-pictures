@@ -1,6 +1,7 @@
 // Build an interractive slider to pick video sections
 var slider = $("#slider");
-var frameSize, froogaloop, videoDuration;
+var frameSize, froogaloop, videoDuration, shotInfo;
+shotInfo = {};
 
 // Remove a collumn
 var removeCol = function(e){
@@ -23,7 +24,7 @@ var removeCol = function(e){
 
 // Adding a new section, and rebuilding colResizable
 var splitCol = function(e){
-	var totalSize, oldTD, newTD;
+	var totalSize, oldTD, newTD, id;
 
 	slider.colResizable({disable: true}); // Deactivate slider temporarally
 
@@ -33,12 +34,14 @@ var splitCol = function(e){
 	var half = totalSize.match(/[\d\.]+/) * 0.5;
 	oldTD.css('width', half + "px");
 	newTD.css('width', half + "px");
+	id = uuid();
+	newTD.attr('id', id);
 	activateSlider();
 }
 
 // Build a new collumn
 var addCol = function(element, data){
-	var tag, concat, newElement;
+	var tag, concat, newElement, id;
 	concat = ""; // Form data together
 	for(var key in data){
 		concat += key + ":" + data[key] + ";";
@@ -53,7 +56,19 @@ var addCol = function(element, data){
 		newElement = $(element).children('td')[0];
 	}
 	buildClick(newElement);
+	sliderStop(); // TEMP!! output data
 	return newElement;
+}
+
+// Generate unique ID
+var uuid = function(id){
+	if(id && _.findKey(shotInfo, id)){ return id; }
+	var id = _.uniqueId("shot_");
+	if(_.findKey(shotInfo, id)){
+		id = uuid();
+	}
+	shotInfo[id] = {};
+	return id;
 }
 
 // build click event into slider
@@ -74,7 +89,15 @@ var sliderDrag = function(e){
 }
 // Update data when sliding stops
 var sliderStop = function(e){
-	// console.log(e);
+	slider.find("td").each(function(index, el) {
+		var value, percent, id;
+		id = $(el).attr('id');
+		value = $(el).width();
+		percent = frameSize / value;
+		shotInfo[id] = { location : percent }
+	});
+
+	$("#output").text( JSON.stringify(shotInfo, null, "  ") );
 }
 // Activate slider on section
 var activateSlider = function(){
@@ -93,7 +116,11 @@ var activateSlider = function(){
 var buildSlider = function(parent, data){
 	var newcol = parent;
 	for (var i = data.length - 1; i >= 0; i--) {
+		var id;
 		newcol = addCol( newcol, data[i]["style"] );
+		if(data[i].id){ id = data[i].id } else { id = uuid(); }
+		$(newcol).attr('id', id);
+		shotInfo[id] = {};
 	}
 	activateSlider();
 }
@@ -106,7 +133,6 @@ jQuery(document).ready(function($) {
 	var playerID = $("#player")[0];
 	$f(playerID).addEvent("ready", function(event, element){
 		froogaloop = $f(playerID);
-		alert("video loaded");
 		froogaloop.api('getDuration', function (value, player_id) {
 			videoDuration = value;
 			buildSlider($("#slider>tbody>tr"), cols);
@@ -115,18 +141,21 @@ jQuery(document).ready(function($) {
 	// Some test data
 	var cols = [
 	{
+		id: uuid(),
 		"style": {
 			"background": "orange",
 			"width": "88px"
 		}
 	},
 	{
+		id: uuid(),
 		"style": {
 			"background": "blue",
 			"width": "123px"
 		}
 	},
 	{
+		id: uuid(),
 		"style": {
 			"background": "green",
 			"width": "289px"

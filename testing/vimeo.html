@@ -25,13 +25,12 @@
 			margin-left: -5px;
 			cursor:col-resize;
 		}
-		#barrier{
+		#output{
 			width: 500px;
-			height: 350px;
-			background: black;
+			background: lightgrey;
 			position: absolute;
+			right: 0px;
 			top: 0px;
-			left: 0px;
 		}
 	</style>
 </head>
@@ -54,9 +53,12 @@
 		</tbody>
 	</table>
 
+	<pre id="output"></pre>
+
 	<script type="text/javascript" src="../bower_components/jquery/dist/jquery.js"></script>
 	<script type="text/javascript" src="../vendorrific/colResizable/dist/colResizable-1.5.source.js"></script>
 	<script type="text/javascript" src="../bower_components/vimeo-player-api/javascript/froogaloop.js"></script>
+	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
 	<script src="vimeo.js" type="text/javascript" charset="utf-8"></script>
 </body>
 </html>
