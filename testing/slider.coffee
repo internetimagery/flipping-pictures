@@ -3,23 +3,34 @@
 
 class Slider
 	sliderLocation: {} # Location of slider (use for percentages).
-	videoDuration: 0 # Duration of the video.
+
 	dragHandles: "<div class='grip'></div>" # Handles used to drag and resize.
+	colMargin: 10 # Minimum size of columns
 	colData: {} # column Data
+	colSorted: []
 
 	events: "scrub" : [], "update" : [] # Store events to be fired
 
 	# Build the slider initially. Slider = parent of slider, data = as below
-	constructor: (slider, data)->
-		if not data
+	# Expecting
+		# { "unique id":
+		# 	CLASS: "myClass",
+		# 	CSS: {
+		# 		background: "red"
+		# 		},
+		# 	CONTENT: "html interior"
+		# }
+	constructor: (slider, @colData)->
+		if not @colData
 			id = @_uuid()
-			data =
+			@colData =
 				id:
 					CLASS : "default"
 					CSS : 
 						background: "grey"
-					CONTENT : "This is a default column"
+					CONTENT : "This is a default column. Check log for structure"
 					RANGE: [0, 1]
+			console.log @colData
 
 		# Create Table for slider
 		@slider = $("<table><tr></tr></table>").appendTo $(slider)
@@ -27,11 +38,8 @@ class Slider
 		@sliderLocation = @slider.offset()
 		@sliderLocation.width = @slider.width()
 
-		# Add in columns
-		parent = sliderInternal
-		for id, col of data
-			parent = @addCol parent, col, id
-		@_activateSlider() # Start the slider
+		# Build Slider
+		@_rebuildCols()
 
 	# Add event callbacks to fire when events happen
 	addEvent: (name, callback)=>
@@ -68,18 +76,22 @@ class Slider
 	# Rebuild all collumns based on current data TODO: add ordering check to columns via range
 	_rebuildCols: =>
 		@_deactivateSlider() # Turn off Slider
+
 		sliderInternal = @slider.find "tr"
 		sliderInternal.html("") # Clear out existing columns
 
-		sorted = []
+		margin = @colMargin / @sliderLocation.width # Minimum size as percentage
+
+		@colSorted = []
 		sort = (lastIndex)=> # Sort columns in order
 			for key, val of @colData
-				if val.RANGE[0] is lastIndex
-					sorted.push key
+			#	console.log "index: #{lastIndex}, magin: #{margin}"
+				if lastIndex <= val.RANGE[0] < (lastIndex + margin) 
+					@colSorted.push key
 					sort val.RANGE[1]
 		sort 0
 		# Build columns
-		for id in sorted
+		for id in @colSorted
 			column = $("<td></td>")
 			.addClass data[id].CLASS
 			.css data[id].CSS
@@ -90,69 +102,32 @@ class Slider
 
 		@_activateSlider() # Restart Slider
 
-
-	# Create a new column. Provide some data to initialize the column.
-	# Expecting { CLASS : "myclass", CSS : { background: "red" }, CONTENT : "html stuff" } key = id
-	addCol: (parent, data, id)=>
-		column = $("<td></td>")
-		.addClass data.CLASS
-		.css data.CSS
-		.html data.CONTENT
-		.attr "id", id
-		.width ((data.RANGE[1] - data.RANGE[0]) * @sliderLocation.width)
-
-		if parent.tagName is "TD" or parent[0].tagName is "TD"
-			$(parent).after column
-			newCol = $(parent).next()[0]
-		else
-			$(parent).append column
-			newCol = $(parent).children("td")[0]
-		@colData[id] = data
-		return newCol
-
 	# Divide an existing column to add a new one in the same section
 	splitCol: (parent, data)=>
-		@_deactivateSlider() # Stop resizing
+		parent = parent.attr "id" if typeof parent is "object" # Grab the ID if given an element, else assume string is id
 
-		# Get existing column and dimensions
-		existing = $(parent).parent "td"
-		totalSize = existing.css "width"
+		multiplier = 0.5 / _.size data # How many columns are we adding? How much do we split em?
+		baseRange = @colData[parent].RANGE[1] - @colData[parent].RANGE[0] # The space we have to fit new columns
+		segment = baseRange * multiplier # New segment size
+		previous = @colData[parent].RANGE[0] + segment # Incriment Sections
+		@colData[parent].RANGE[1] = previous # Update parent to new size
 
-		# Create a new column
-		newcol = $( addCol existing[0], { "background" : "grey" } )
-		half = totalSize.match(/[\d\.]+/) * 0.5
+		# Modify ranges to fit in extra columns
+		for id, col of data
+			col.RANGE = []
+			col.RANGE.push previous
+			previous = previous + segment
+			col.RANGE.push previous
+			@colData[id] = col
 
-		# Size up new columns
-		existing.css "width", "#{half}px"
-		newcol.css "width", "#{half}px"
-
-		# Give the new column a unique ID
-		id = @_uuid()
-		newcol.attr "id", id
-
-		# Restart Slider
-		@_activateSlider()
+		@_rebuildCols() # Rebuild the slider
 
 	# Remove a column
-	removeCol: (parent)=>
-		@_deactivateSlider() # Stop resizing
+	removeCol: (id)=>
+		id = id.attr "id" if typeof id is "object"
 
-		parent = $(parent).parent "td"
-		id = parent.attr "id"
-
-		# Calculate our missing values
-		half = $(parent).css("width").match(/[\d\.]+/) * 0.5
-		prev = $(parent).prev()
-		next = $(parent).next()
-
-		# Remove column and data
-		$(parent).remove()
 		delete @colData[id]
-
-		prev.css "width", (prev.css("width") + "#{half}px")
-		next.css "width", (next.css("width") + "#{half}px")
-
-		@_activateSlider() # Restart Slider.
+		@_rebuildCols()
 
 	# Generate a unique ID for columns.
 	_uuid: =>
@@ -172,7 +147,7 @@ class Slider
 			draggingClass: "grip-drag"
 			onDrag: @_scrubVideo
 			onResize: @_updateData
-			minWidth: 8
+			minWidth: @colMargin
 	# Disable slider functionality for slider modification
 	_deactivateSlider: =>
 		@slider.colResizable disable: true 

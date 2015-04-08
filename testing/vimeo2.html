@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta charset="utf-8"></meta>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
 	<title>Vimeo player test</title>
 	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css"></link>
 	<style>
@@ -69,7 +69,7 @@
 					CSS: {
 						background : "blue"
 					},
-					CONTENT: "<span>NEW</span> | <span>DEL</span>",
+					CONTENT: "<span onClick=\"newSection($(this));\">NEW</span> | <span>DEL</span>",
 					RANGE: [ 0, 0.2 ]
 				},
 				"shot_2": {
@@ -77,7 +77,7 @@
 					CSS: {
 						background : "green"
 					},
-					CONTENT: "<span>NEW</span> | <span>DEL</span>",
+					CONTENT: "<span onClick=\"newSection(this);\">NEW</span> | <span>DEL</span>",
 					RANGE: [ 0.2, 0.8 ]
 				},
 				"shot_3": {
@@ -85,24 +85,46 @@
 					CSS: {
 						background : "orange"
 					},
-					CONTENT: "<span>NEW</span> | <span>DEL</span>",
+					CONTENT: "<span onClick=\"newSection(this);\">NEW</span> | <span>DEL</span>",
 					RANGE: [ 0.8, 1 ]
 				}
 			};
 			var slider = new Slider( "#slider", data );
 
+			function newSection (col) {
+				var id = _.uniqueId("new_");
+				var data = {}
+				data[id] = {
+					CLASS: "row",
+					CSS: {
+						background : "yellow"
+					},
+					CONTENT: "<span onClick=\"newSection(this);\">NEW</span> | <span>DEL</span>",
+					RANGE: [ 0.8, 1 ]
+				};
+				slider.splitCol( $(col), data );
+			}
+
 			jQuery(document).ready(function($) {
 
 			$("#output").click(function(e){
-				slider._rebuildCols();
+				slider.splitCol("shot_2", {
+					"shot_new": {
+						CLASS: "row",
+						CSS: {
+							background : "yellow"
+						},
+						CONTENT: "NEW COL",
+						RANGE: [ 0, 1 ]
+					}
+				});
 			});
 
 			slider.addEvent( "update", function(data){
 				$("#output").text( JSON.stringify( data, null, "    " ) );
-				console.log(data);
 			});
 			slider.addEvent( "scrub", function(time){
-				//console.log("time: "+time);
+				console.log("scrub time: "+time);
 			});
 		});
 	</script>
