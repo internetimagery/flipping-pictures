@@ -1,8 +1,8 @@
 # Initialize the slider
-# Requres: colResizable, underscorejs, jquery, froogaloop
+# Requres: colResizable, underscorejs, jquery
 
 class Slider
-	sliderWidth: 0 # Width of slider (use for percentages).
+	sliderLocation: {} # Location of slider (use for percentages).
 	videoDuration: 0 # Duration of the video.
 	dragHandles: "<div class='grip'></div>" # Handles used to drag and resize.
 	colData: {} # column Data
@@ -10,24 +10,26 @@ class Slider
 	events: "scrub" : [], "update" : [] # Store events to be fired
 
 	# Build the slider initially. Slider = parent of slider, data = as below
-	constructor: (slider, data)->
-		if not data
-			data = [
+	constructor: (slider, @colData)->
+		if not @colData
+			id = @_uuid()
+			@colData[id] = 
 				CLASS : "default"
 				CSS : 
 					background: "grey"
 				CONTENT : "This is a default column",
-				RANGE: [0, 100]
-			]
+				RANGE: [0, 1]
+
 		# Create Table for slider
 		@slider = $("<table><tr></tr></table>").appendTo $(slider)
 		sliderInternal = @slider.find "tr"
-		@sliderWidth = @slider.width()
+		@sliderLocation = @slider.offset()
+		@sliderLocation.width = @slider.width()
 
 		# Add in columns
 		parent = sliderInternal
-		for col in data
-			parent = @addCol parent, col
+		for id, col of @colData
+			parent = @addCol parent, col, id
 		@_activateSlider() # Start the slider
 
 	# Add event callbacks to fire when events happen
@@ -37,7 +39,7 @@ class Slider
 
 	# Fire event when scrubbing the timeline slider. Send out a % value
 	_scrubVideo: (e)=>
-		percent = e.pageX / @sliderWidth # Form a percentage along the slider TODO: add check for leftmost location
+		percent = (e.pageX - @sliderLocation.left) / @sliderLocation.width # Form a percentage along the slider TODO: add check for leftmost location
 		if percent > 1
 			percent = 1
 		if percent < 0
@@ -47,23 +49,30 @@ class Slider
 	# Fire event when scrubbing stops and data is updated
 	_updateData: (e)=>
 		@slider.find "td"
-		.each (index, el)=> # For each column in the slider
+		.each (index, el)=> # For each column in the slider calculate new range value
 			id = $(el).attr "id"
-			width = $(el).width()
-			percent = @sliderWidth / width
-			@colData[id] =
-				location : percent
+			start = $(el).offset().left - @sliderLocation.left
+			end = ($(el).width() + start) / @sliderLocation.width
+
+			start = start / @sliderLocation.width if start # Ensure we're not dividing by zero
+
+			# Clamp between 0 and 1
+			start = 0 if start < 0
+			end = 1 if end > 1
+
+			# Store new Range values
+			@colData[id].RANGE = [start, end]
 		run(@colData) for run in @events["update"]
 
 	# Create a new column. Provide some data to initialize the column.
-	# Expecting { CLASS : "myclass", CSS : { background: "red" }, CONTENT : "html stuff" }
-	addCol: (parent, data)=>
+	# Expecting { CLASS : "myclass", CSS : { background: "red" }, CONTENT : "html stuff" } key = id
+	addCol: (parent, data, id)=>
 		column = $("<td></td>")
 		.addClass data.CLASS
 		.css data.CSS
 		.html data.CONTENT
-		.attr "id", @_uuid()
-		.width ((0.01*(data.RANGE[1] - data.RANGE[0])) * @sliderWidth)
+		.attr "id", id
+		.width ((data.RANGE[1] - data.RANGE[0]) * @sliderLocation.width)
 
 		if parent.tagName is "TD" or parent[0].tagName is "TD"
 			$(parent).after column
@@ -139,5 +148,3 @@ class Slider
 	# Disable slider functionality for slider modification
 	_deactivateSlider: =>
 		@slider.colResizable disable: true 
-
-# Slider should just create the slider columns, activate/deactivate the stuff and scrub the video. Data can be used elsewhere.

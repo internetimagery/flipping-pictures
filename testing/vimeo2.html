@@ -6,11 +6,18 @@
 	<title>Vimeo player test</title>
 	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css"></link>
 	<style>
-		#slider table{
+		#slider{
 			height: 30px;
 			width: 500px;
 			background: lightgrey;
 			text-align: center;
+			margin: auto;
+			position: relative;
+			margin-top: 60px;
+		}
+		#slider table{
+			width: 100%;
+			height: 100%;
 		}
 		#slider table td span{
 			cursor:pointer;
@@ -28,9 +35,8 @@
 		#output{
 			width: 500px;
 			background: lightgrey;
-			position: absolute;
-			right: 0px;
-			top: 0px;
+			margin: auto;
+			margin-top: 30px;
 		}
 	</style>
 </head>
@@ -57,36 +63,39 @@
 	<script src="slider.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/javascript">
 		jQuery(document).ready(function($) {
-			var data = [{
-				CLASS: "row",
-				CSS: {
-					background : "blue"
+			var data = {
+				"shot_1": {
+					CLASS: "row",
+					CSS: {
+						background : "blue"
+					},
+					CONTENT: "col 1",
+					RANGE: [ 0, 0.2 ]
 				},
-				CONTENT: "col 1",
-				RANGE: [ 0, 20 ]
-			},
-			{
-				CLASS: "row",
-				CSS: {
-					background : "green"
+				"shot_2": {
+					CLASS: "row",
+					CSS: {
+						background : "green"
+					},
+					CONTENT: "col 2",
+					RANGE: [ 0.2, 0.8 ]
 				},
-				CONTENT: "col 2",
-				RANGE: [ 20, 80 ]
-			},
-			{
-				CLASS: "row",
-				CSS: {
-					background : "orange"
-				},
-				CONTENT: "col 3",
-				RANGE: [ 80, 100 ]
-			}];
+				"shot_3": {
+					CLASS: "row",
+					CSS: {
+						background : "orange"
+					},
+					CONTENT: "col 3",
+					RANGE: [ 0.8, 1 ]
+				}
+			};
 			var slider = new Slider( "#slider", data );
 			slider.addEvent( "update", function(data){
-				console.log("updated");
+				$("#output").text( JSON.stringify( data, null, " " ) );
+				console.log(data);
 			});
 			slider.addEvent( "scrub", function(time){
-				console.log("time: "+time);
+				//console.log("time: "+time);
 			});
 		});
 	</script>

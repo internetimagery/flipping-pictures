@@ -3,7 +3,7 @@ var Slider,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 Slider = (function() {
-  Slider.prototype.sliderWidth = 0;
+  Slider.prototype.sliderLocation = {};
 
   Slider.prototype.videoDuration = 0;
 
@@ -16,7 +16,9 @@ Slider = (function() {
     "update": []
   };
 
-  function Slider(slider, data) {
+  function Slider(slider, colData) {
+    var col, id, parent, ref, sliderInternal;
+    this.colData = colData;
     this._deactivateSlider = bind(this._deactivateSlider, this);
     this._activateSlider = bind(this._activateSlider, this);
     this._uuid = bind(this._uuid, this);
@@ -26,26 +28,26 @@ Slider = (function() {
     this._updateData = bind(this._updateData, this);
     this._scrubVideo = bind(this._scrubVideo, this);
     this.addEvent = bind(this.addEvent, this);
-    var col, i, len, parent, sliderInternal;
-    if (!data) {
-      data = [
-        {
-          CLASS: "default",
-          CSS: {
-            background: "grey"
-          },
-          CONTENT: "This is a default column",
-          RANGE: [0, 100]
-        }
-      ];
+    if (!this.colData) {
+      id = this._uuid();
+      this.colData[id] = {
+        CLASS: "default",
+        CSS: {
+          background: "grey"
+        },
+        CONTENT: "This is a default column",
+        RANGE: [0, 1]
+      };
     }
     this.slider = $("<table><tr></tr></table>").appendTo($(slider));
     sliderInternal = this.slider.find("tr");
-    this.sliderWidth = this.slider.width();
+    this.sliderLocation = this.slider.offset();
+    this.sliderLocation.width = this.slider.width();
     parent = sliderInternal;
-    for (i = 0, len = data.length; i < len; i++) {
-      col = data[i];
-      parent = this.addCol(parent, col);
+    ref = this.colData;
+    for (id in ref) {
+      col = ref[id];
+      parent = this.addCol(parent, col, id);
     }
     this._activateSlider();
   }
@@ -58,7 +60,7 @@ Slider = (function() {
 
   Slider.prototype._scrubVideo = function(e) {
     var i, len, percent, ref, results, run;
-    percent = e.pageX / this.sliderWidth;
+    percent = (e.pageX - this.sliderLocation.left) / this.sliderLocation.width;
     if (percent > 1) {
       percent = 1;
     }
@@ -78,13 +80,20 @@ Slider = (function() {
     var i, len, ref, results, run;
     this.slider.find("td").each((function(_this) {
       return function(index, el) {
-        var id, percent, width;
+        var end, id, start;
         id = $(el).attr("id");
-        width = $(el).width();
-        percent = _this.sliderWidth / width;
-        return _this.colData[id] = {
-          location: percent
-        };
+        start = $(el).offset().left - _this.sliderLocation.left;
+        end = ($(el).width() + start) / _this.sliderLocation.width;
+        if (start) {
+          start = start / _this.sliderLocation.width;
+        }
+        if (start < 0) {
+          start = 0;
+        }
+        if (end > 1) {
+          end = 1;
+        }
+        return _this.colData[id].RANGE = [start, end];
       };
     })(this));
     ref = this.events["update"];
@@ -96,9 +105,9 @@ Slider = (function() {
     return results;
   };
 
-  Slider.prototype.addCol = function(parent, data) {
+  Slider.prototype.addCol = function(parent, data, id) {
     var column, newCol;
-    column = $("<td></td>").addClass(data.CLASS).css(data.CSS).html(data.CONTENT).attr("id", this._uuid()).width((0.01 * (data.RANGE[1] - data.RANGE[0])) * this.sliderWidth);
+    column = $("<td></td>").addClass(data.CLASS).css(data.CSS).html(data.CONTENT).attr("id", id).width((data.RANGE[1] - data.RANGE[0]) * this.sliderLocation.width);
     if (parent.tagName === "TD" || parent[0].tagName === "TD") {
       $(parent).after(column);
       newCol = $(parent).next()[0];
