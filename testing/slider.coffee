@@ -10,15 +10,16 @@ class Slider
 	events: "scrub" : [], "update" : [] # Store events to be fired
 
 	# Build the slider initially. Slider = parent of slider, data = as below
-	constructor: (slider, @colData)->
-		if not @colData
+	constructor: (slider, data)->
+		if not data
 			id = @_uuid()
-			@colData[id] = 
-				CLASS : "default"
-				CSS : 
-					background: "grey"
-				CONTENT : "This is a default column",
-				RANGE: [0, 1]
+			data =
+				id:
+					CLASS : "default"
+					CSS : 
+						background: "grey"
+					CONTENT : "This is a default column"
+					RANGE: [0, 1]
 
 		# Create Table for slider
 		@slider = $("<table><tr></tr></table>").appendTo $(slider)
@@ -28,7 +29,7 @@ class Slider
 
 		# Add in columns
 		parent = sliderInternal
-		for id, col of @colData
+		for id, col of data
 			parent = @addCol parent, col, id
 		@_activateSlider() # Start the slider
 
@@ -64,6 +65,32 @@ class Slider
 			@colData[id].RANGE = [start, end]
 		run(@colData) for run in @events["update"]
 
+	# Rebuild all collumns based on current data TODO: add ordering check to columns via range
+	_rebuildCols: =>
+		@_deactivateSlider() # Turn off Slider
+		sliderInternal = @slider.find "tr"
+		sliderInternal.html("") # Clear out existing columns
+
+		sorted = []
+		sort = (lastIndex)=> # Sort columns in order
+			for key, val of @colData
+				if val.RANGE[0] is lastIndex
+					sorted.push key
+					sort val.RANGE[1]
+		sort 0
+		# Build columns
+		for id in sorted
+			column = $("<td></td>")
+			.addClass data[id].CLASS
+			.css data[id].CSS
+			.html data[id].CONTENT
+			.attr "id", id
+			.width ((data[id].RANGE[1] - data[id].RANGE[0]) * @sliderLocation.width)
+			sliderInternal.append column
+
+		@_activateSlider() # Restart Slider
+
+
 	# Create a new column. Provide some data to initialize the column.
 	# Expecting { CLASS : "myclass", CSS : { background: "red" }, CONTENT : "html stuff" } key = id
 	addCol: (parent, data, id)=>
@@ -80,10 +107,11 @@ class Slider
 		else
 			$(parent).append column
 			newCol = $(parent).children("td")[0]
+		@colData[id] = data
 		return newCol
 
 	# Divide an existing column to add a new one in the same section
-	splitCol: (parent)=>
+	splitCol: (parent, data)=>
 		@_deactivateSlider() # Stop resizing
 
 		# Get existing column and dimensions
