@@ -85,6 +85,9 @@
 			slider.addEvent( "update", function(data){
 				console.log("updated");
 			});
+			slider.addEvent( "scrub", function(time){
+				console.log("time: "+time);
+			});
 		});
 	</script>
 </body>

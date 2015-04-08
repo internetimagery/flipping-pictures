@@ -51,7 +51,7 @@ Slider = (function() {
   }
 
   Slider.prototype.addEvent = function(name, callback) {
-    if (typeof callback === "function") {
+    if (_.isFunction(callback)) {
       return this.events[name].push(callback);
     }
   };
@@ -59,6 +59,12 @@ Slider = (function() {
   Slider.prototype._scrubVideo = function(e) {
     var i, len, percent, ref, results, run;
     percent = e.pageX / this.sliderWidth;
+    if (percent > 1) {
+      percent = 1;
+    }
+    if (percent < 0) {
+      percent = 0;
+    }
     ref = this.events["scrub"];
     results = [];
     for (i = 0, len = ref.length; i < len; i++) {

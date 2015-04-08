@@ -5,7 +5,7 @@ class Slider
 	sliderWidth: 0 # Width of slider (use for percentages).
 	videoDuration: 0 # Duration of the video.
 	dragHandles: "<div class='grip'></div>" # Handles used to drag and resize.
-	colData: {} # Collumn Data
+	colData: {} # column Data
 
 	events: "scrub" : [], "update" : [] # Store events to be fired
 
@@ -32,18 +32,22 @@ class Slider
 
 	# Add event callbacks to fire when events happen
 	addEvent: (name, callback)=>
-		if typeof callback is "function"
+		if _.isFunction callback
 			@events[name].push callback
 
 	# Fire event when scrubbing the timeline slider. Send out a % value
 	_scrubVideo: (e)=>
 		percent = e.pageX / @sliderWidth # Form a percentage along the slider TODO: add check for leftmost location
+		if percent > 1
+			percent = 1
+		if percent < 0
+			percent = 0
 		run(percent) for run in @events["scrub"]
 
 	# Fire event when scrubbing stops and data is updated
 	_updateData: (e)=>
 		@slider.find "td"
-		.each (index, el)=> # For each collumn in the slider
+		.each (index, el)=> # For each column in the slider
 			id = $(el).attr "id"
 			width = $(el).width()
 			percent = @sliderWidth / width
@@ -69,7 +73,7 @@ class Slider
 			newCol = $(parent).children("td")[0]
 		return newCol
 
-	# Divide an existing collumn to add a new one in the same section
+	# Divide an existing column to add a new one in the same section
 	splitCol: (parent)=>
 		@_deactivateSlider() # Stop resizing
 
@@ -92,7 +96,7 @@ class Slider
 		# Restart Slider
 		@_activateSlider()
 
-	# Remove a collumn
+	# Remove a column
 	removeCol: (parent)=>
 		@_deactivateSlider() # Stop resizing
 
@@ -104,7 +108,7 @@ class Slider
 		prev = $(parent).prev()
 		next = $(parent).next()
 
-		# Remove collumn and data
+		# Remove column and data
 		$(parent).remove()
 		delete @colData[id]
 
@@ -113,7 +117,7 @@ class Slider
 
 		@_activateSlider() # Restart Slider.
 
-	# Generate a unique ID for collumns.
+	# Generate a unique ID for columns.
 	_uuid: =>
 		id = _.uniqueId "shot_"
 		# If the id exists already.
@@ -136,4 +140,4 @@ class Slider
 	_deactivateSlider: =>
 		@slider.colResizable disable: true 
 
-# Slider should just create the slider collumns, activate/deactivate the stuff and scrub the video. Data can be used elsewhere.
+# Slider should just create the slider columns, activate/deactivate the stuff and scrub the video. Data can be used elsewhere.
