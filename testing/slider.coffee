@@ -46,6 +46,11 @@ class Slider
 		if _.isFunction callback
 			@events[name].push callback
 
+	# Remove table and clean everything up.
+	remove: =>
+		@_deactivateSlider()
+		@slider.remove()
+
 	# Divide an existing column to add a new one in the same section
 	splitCol: (parent, data)=>
 		parent = parent.attr "id" if typeof parent is "object" # Grab the ID if given an element, else assume string is id

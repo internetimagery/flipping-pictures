@@ -42,6 +42,7 @@
 	</style>
 </head>
 <body>
+	<a href="#" onClick="removeAll();">Remove</a>
 	<!-- <iframe
 		id="player"
 		src="https://player.vimeo.com/video/116549926?api=1&player_id=player"
@@ -114,6 +115,10 @@
 			}
 			function outputData (data) {
 				$("#output").text( JSON.stringify( data, null, "    "));
+			}
+			function removeAll () {
+				outputData({});
+				slider.remove()
 			}
 
 			jQuery(document).ready(function($) {

@@ -28,6 +28,7 @@ Slider = (function() {
     this._scrubVideo = bind(this._scrubVideo, this);
     this.removeCol = bind(this.removeCol, this);
     this.splitCol = bind(this.splitCol, this);
+    this.remove = bind(this.remove, this);
     this.addEvent = bind(this.addEvent, this);
     if (!this.colData) {
       id = _.uniqueId("shot_");
@@ -54,6 +55,11 @@ Slider = (function() {
     if (_.isFunction(callback)) {
       return this.events[name].push(callback);
     }
+  };
+
+  Slider.prototype.remove = function() {
+    this._deactivateSlider();
+    return this.slider.remove();
   };
 
   Slider.prototype.splitCol = function(parent, data) {
