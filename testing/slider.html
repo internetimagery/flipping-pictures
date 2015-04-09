@@ -42,7 +42,8 @@
 	</style>
 </head>
 <body>
-	<a href="#" onClick="removeAll();">Remove</a>
+	<p><a href="#" onClick="removeAll();">Remove</a></p>
+	<p><span id="scrub"></span></p>
 	<!-- <iframe
 		id="player"
 		src="https://player.vimeo.com/video/116549926?api=1&player_id=player"
@@ -127,7 +128,7 @@
 				outputData( data );
 			});
 			slider.addEvent( "scrub", function(time){
-				//console.log("scrub time: "+time);
+				$("#scrub").text( "Scrubbing: " + time );
 			});
 			outputData( data );
 		});
