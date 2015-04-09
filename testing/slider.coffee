@@ -97,14 +97,18 @@ class Slider
 					@colSorted.push id
 
 		# Build columns
+		lastIndex = 0
 		for id in @colSorted
+			currentIndex = @colData[id].RANGE[1]
+			currentIndex = 1 if currentIndex > 1
 			column = $("<td></td>")
 			.addClass @colData[id].CLASS
 			.css @colData[id].CSS
 			.html @colData[id].CONTENT
 			.attr "id", id
-			.width ((@colData[id].RANGE[1] - @colData[id].RANGE[0]) * @sliderLocation.width)
+			.width ((currentIndex - lastIndex) * @sliderLocation.width)
 			sliderInternal.append column
+			lastIndex = currentIndex
 
 		@_activateSlider() # Restart Slider
 
@@ -128,6 +132,7 @@ class Slider
 			@colData[id] = col
 
 		@_rebuildCols() # Rebuild the slider
+		@_updateData() # Update modified data
 
 	# Remove a column
 	removeCol: (id)=>
@@ -150,6 +155,7 @@ class Slider
 
 		delete @colData[id]
 		@_rebuildCols()
+		@_updateData() # Update modified data
 
 	# Activate Slider functionality.
 	_activateSlider: =>

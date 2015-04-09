@@ -108,7 +108,7 @@ Slider = (function() {
   };
 
   Slider.prototype._rebuildCols = function() {
-    var column, id, j, k, len, len1, map, margin, rangeMap, ref, ref1, sliderInternal, val;
+    var column, currentIndex, id, j, k, lastIndex, len, len1, map, margin, rangeMap, ref, ref1, sliderInternal, val;
     this._deactivateSlider();
     sliderInternal = this.slider.find("tr");
     sliderInternal.html("");
@@ -128,11 +128,17 @@ Slider = (function() {
         }
       }
     }
+    lastIndex = 0;
     ref1 = this.colSorted;
     for (k = 0, len1 = ref1.length; k < len1; k++) {
       id = ref1[k];
-      column = $("<td></td>").addClass(this.colData[id].CLASS).css(this.colData[id].CSS).html(this.colData[id].CONTENT).attr("id", id).width((this.colData[id].RANGE[1] - this.colData[id].RANGE[0]) * this.sliderLocation.width);
+      currentIndex = this.colData[id].RANGE[1];
+      if (currentIndex > 1) {
+        currentIndex = 1;
+      }
+      column = $("<td></td>").addClass(this.colData[id].CLASS).css(this.colData[id].CSS).html(this.colData[id].CONTENT).attr("id", id).width((currentIndex - lastIndex) * this.sliderLocation.width);
       sliderInternal.append(column);
+      lastIndex = currentIndex;
     }
     return this._activateSlider();
   };
@@ -156,7 +162,8 @@ Slider = (function() {
       col.RANGE.push(previous);
       this.colData[id] = col;
     }
-    return this._rebuildCols();
+    this._rebuildCols();
+    return this._updateData();
   };
 
   Slider.prototype.removeCol = function(id) {
@@ -180,7 +187,8 @@ Slider = (function() {
       this.colData[this.colSorted[index + 1]].RANGE[0] = middle;
     }
     delete this.colData[id];
-    return this._rebuildCols();
+    this._rebuildCols();
+    return this._updateData();
   };
 
   Slider.prototype._activateSlider = function() {
