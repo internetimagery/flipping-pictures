@@ -23,11 +23,11 @@ Slider = (function() {
     this.colData = colData;
     this._deactivateSlider = bind(this._deactivateSlider, this);
     this._activateSlider = bind(this._activateSlider, this);
-    this.removeCol = bind(this.removeCol, this);
-    this.splitCol = bind(this.splitCol, this);
     this._rebuildCols = bind(this._rebuildCols, this);
     this._updateData = bind(this._updateData, this);
     this._scrubVideo = bind(this._scrubVideo, this);
+    this.removeCol = bind(this.removeCol, this);
+    this.splitCol = bind(this.splitCol, this);
     this.addEvent = bind(this.addEvent, this);
     if (!this.colData) {
       id = _.uniqueId("shot_");
@@ -54,6 +54,54 @@ Slider = (function() {
     if (_.isFunction(callback)) {
       return this.events[name].push(callback);
     }
+  };
+
+  Slider.prototype.splitCol = function(parent, data) {
+    var baseRange, col, id, multiplier, previous, segment;
+    this._updateData();
+    if (typeof parent === "object") {
+      parent = parent.attr("id");
+    }
+    multiplier = 0.5 / _.size(data);
+    baseRange = this.colData[parent].RANGE[1] - this.colData[parent].RANGE[0];
+    segment = baseRange * multiplier;
+    previous = this.colData[parent].RANGE[0] + segment;
+    this.colData[parent].RANGE[1] = previous;
+    for (id in data) {
+      col = data[id];
+      col.RANGE = [];
+      col.RANGE.push(previous);
+      previous = previous + segment;
+      col.RANGE.push(previous);
+      this.colData[id] = col;
+    }
+    this._rebuildCols();
+    return this._updateData();
+  };
+
+  Slider.prototype.removeCol = function(id) {
+    var index, middle;
+    this._updateData();
+    if (typeof id === "object") {
+      id = id.attr("id");
+    }
+    index = this.colSorted.indexOf(id);
+    if (!index) {
+      if (this.colSorted.length > 1) {
+        this.colData[this.colSorted[1]].RANGE[0] = 0;
+      } else {
+        return alert("You cannot remove the last column.");
+      }
+    } else if (index === (this.colSorted.length - 1)) {
+      this.colData[this.colSorted[this.colSorted.length - 2]].RANGE[1] = 1;
+    } else {
+      middle = ((this.colData[id].RANGE[1] - this.colData[id].RANGE[0]) * 0.5) + this.colData[id].RANGE[0];
+      this.colData[this.colSorted[index - 1]].RANGE[1] = middle;
+      this.colData[this.colSorted[index + 1]].RANGE[0] = middle;
+    }
+    delete this.colData[id];
+    this._rebuildCols();
+    return this._updateData();
   };
 
   Slider.prototype._scrubVideo = function(e) {
@@ -141,54 +189,6 @@ Slider = (function() {
       lastIndex = currentIndex;
     }
     return this._activateSlider();
-  };
-
-  Slider.prototype.splitCol = function(parent, data) {
-    var baseRange, col, id, multiplier, previous, segment;
-    this._updateData();
-    if (typeof parent === "object") {
-      parent = parent.attr("id");
-    }
-    multiplier = 0.5 / _.size(data);
-    baseRange = this.colData[parent].RANGE[1] - this.colData[parent].RANGE[0];
-    segment = baseRange * multiplier;
-    previous = this.colData[parent].RANGE[0] + segment;
-    this.colData[parent].RANGE[1] = previous;
-    for (id in data) {
-      col = data[id];
-      col.RANGE = [];
-      col.RANGE.push(previous);
-      previous = previous + segment;
-      col.RANGE.push(previous);
-      this.colData[id] = col;
-    }
-    this._rebuildCols();
-    return this._updateData();
-  };
-
-  Slider.prototype.removeCol = function(id) {
-    var index, middle;
-    this._updateData();
-    if (typeof id === "object") {
-      id = id.attr("id");
-    }
-    index = this.colSorted.indexOf(id);
-    if (!index) {
-      if (this.colSorted.length > 1) {
-        this.colData[this.colSorted[1]].RANGE[0] = 0;
-      } else {
-        return alert("You cannot remove the last column.");
-      }
-    } else if (index === (this.colSorted.length - 1)) {
-      this.colData[this.colSorted[this.colSorted.length - 2]].RANGE[1] = 1;
-    } else {
-      middle = ((this.colData[id].RANGE[1] - this.colData[id].RANGE[0]) * 0.5) + this.colData[id].RANGE[0];
-      this.colData[this.colSorted[index - 1]].RANGE[1] = middle;
-      this.colData[this.colSorted[index + 1]].RANGE[0] = middle;
-    }
-    delete this.colData[id];
-    this._rebuildCols();
-    return this._updateData();
   };
 
   Slider.prototype._activateSlider = function() {

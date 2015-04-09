@@ -46,6 +46,51 @@ class Slider
 		if _.isFunction callback
 			@events[name].push callback
 
+	# Divide an existing column to add a new one in the same section
+	splitCol: (parent, data)=>
+		@_updateData() # Refresh Data
+		parent = parent.attr "id" if typeof parent is "object" # Grab the ID if given an element, else assume string is id
+
+		multiplier = 0.5 / _.size data # How many columns are we adding? How much do we split em?
+		baseRange = @colData[parent].RANGE[1] - @colData[parent].RANGE[0] # The space we have to fit new columns
+		segment = baseRange * multiplier # New segment size
+		previous = @colData[parent].RANGE[0] + segment # Incriment Sections
+		@colData[parent].RANGE[1] = previous # Update parent to new size
+
+		# Modify ranges to fit in extra columns
+		for id, col of data
+			col.RANGE = []
+			col.RANGE.push previous
+			previous = previous + segment
+			col.RANGE.push previous
+			@colData[id] = col
+
+		@_rebuildCols() # Rebuild the slider
+		@_updateData() # Update modified data
+
+	# Remove a column
+	removeCol: (id)=>
+		@_updateData() # Refresh Data
+		id = id.attr "id" if typeof id is "object"
+
+		index = @colSorted.indexOf id
+
+		if not index # We are removing the first column.
+			if @colSorted.length > 1
+				@colData[ @colSorted[1] ].RANGE[0] = 0
+			else
+				return alert "You cannot remove the last column."
+		else if index is (@colSorted.length - 1) # We are removing the last column.
+			@colData[ @colSorted[ @colSorted.length - 2 ] ].RANGE[1] = 1
+		else # We are removing a column in the middle somewhere
+			middle = ((@colData[id].RANGE[1] - @colData[id].RANGE[0]) * 0.5) + @colData[id].RANGE[0]
+			@colData[ @colSorted[ index - 1 ]].RANGE[1] = middle
+			@colData[ @colSorted[ index + 1 ]].RANGE[0] = middle			
+
+		delete @colData[id]
+		@_rebuildCols()
+		@_updateData() # Update modified data
+
 	# Fire event when scrubbing the timeline slider. Send out a % value
 	_scrubVideo: (e)=>
 		percent = (e.pageX - @sliderLocation.left) / @sliderLocation.width # Form a percentage along the slider TODO: add check for leftmost location
@@ -111,51 +156,6 @@ class Slider
 			lastIndex = currentIndex
 
 		@_activateSlider() # Restart Slider
-
-	# Divide an existing column to add a new one in the same section
-	splitCol: (parent, data)=>
-		@_updateData() # Refresh Data
-		parent = parent.attr "id" if typeof parent is "object" # Grab the ID if given an element, else assume string is id
-
-		multiplier = 0.5 / _.size data # How many columns are we adding? How much do we split em?
-		baseRange = @colData[parent].RANGE[1] - @colData[parent].RANGE[0] # The space we have to fit new columns
-		segment = baseRange * multiplier # New segment size
-		previous = @colData[parent].RANGE[0] + segment # Incriment Sections
-		@colData[parent].RANGE[1] = previous # Update parent to new size
-
-		# Modify ranges to fit in extra columns
-		for id, col of data
-			col.RANGE = []
-			col.RANGE.push previous
-			previous = previous + segment
-			col.RANGE.push previous
-			@colData[id] = col
-
-		@_rebuildCols() # Rebuild the slider
-		@_updateData() # Update modified data
-
-	# Remove a column
-	removeCol: (id)=>
-		@_updateData() # Refresh Data
-		id = id.attr "id" if typeof id is "object"
-
-		index = @colSorted.indexOf id
-
-		if not index # We are removing the first column.
-			if @colSorted.length > 1
-				@colData[ @colSorted[1] ].RANGE[0] = 0
-			else
-				return alert "You cannot remove the last column."
-		else if index is (@colSorted.length - 1) # We are removing the last column.
-			@colData[ @colSorted[ @colSorted.length - 2 ] ].RANGE[1] = 1
-		else # We are removing a column in the middle somewhere
-			middle = ((@colData[id].RANGE[1] - @colData[id].RANGE[0]) * 0.5) + @colData[id].RANGE[0]
-			@colData[ @colSorted[ index - 1 ]].RANGE[1] = middle
-			@colData[ @colSorted[ index + 1 ]].RANGE[0] = middle			
-
-		delete @colData[id]
-		@_rebuildCols()
-		@_updateData() # Update modified data
 
 	# Activate Slider functionality.
 	_activateSlider: =>

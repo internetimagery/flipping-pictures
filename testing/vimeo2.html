@@ -37,6 +37,7 @@
 			background: lightgrey;
 			margin: auto;
 			margin-top: 30px;
+			font-size: 0.7em;
 		}
 	</style>
 </head>
@@ -111,16 +112,19 @@
 				slider.removeCol(id);
 				console.log("removing section");
 			}
+			function outputData (data) {
+				$("#output").text( JSON.stringify( data, null, "    "));
+			}
 
 			jQuery(document).ready(function($) {
 
 			slider.addEvent( "update", function(data){
-				$("#output").text( JSON.stringify( data, null, "    " ) );
+				outputData( data );
 			});
 			slider.addEvent( "scrub", function(time){
 				//console.log("scrub time: "+time);
 			});
-			$("#output").text( JSON.stringify( data, null, "    " ));
+			outputData( data );
 		});
 	</script>
 </body>
