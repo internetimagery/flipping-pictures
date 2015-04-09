@@ -58,7 +58,6 @@ Slider = (function() {
 
   Slider.prototype.splitCol = function(parent, data) {
     var baseRange, col, id, multiplier, previous, segment;
-    this._updateData();
     if (typeof parent === "object") {
       parent = parent.attr("id");
     }
@@ -80,8 +79,7 @@ Slider = (function() {
   };
 
   Slider.prototype.removeCol = function(id) {
-    var index, middle;
-    this._updateData();
+    var index;
     if (typeof id === "object") {
       id = id.attr("id");
     }
@@ -92,12 +90,8 @@ Slider = (function() {
       } else {
         return alert("You cannot remove the last column.");
       }
-    } else if (index === (this.colSorted.length - 1)) {
-      this.colData[this.colSorted[this.colSorted.length - 2]].RANGE[1] = 1;
     } else {
-      middle = ((this.colData[id].RANGE[1] - this.colData[id].RANGE[0]) * 0.5) + this.colData[id].RANGE[0];
-      this.colData[this.colSorted[index - 1]].RANGE[1] = middle;
-      this.colData[this.colSorted[index + 1]].RANGE[0] = middle;
+      this.colData[this.colSorted[index - 1]].RANGE[1] = this.colData[id].RANGE[1];
     }
     delete this.colData[id];
     this._rebuildCols();

@@ -48,7 +48,6 @@ class Slider
 
 	# Divide an existing column to add a new one in the same section
 	splitCol: (parent, data)=>
-		@_updateData() # Refresh Data
 		parent = parent.attr "id" if typeof parent is "object" # Grab the ID if given an element, else assume string is id
 
 		multiplier = 0.5 / _.size data # How many columns are we adding? How much do we split em?
@@ -70,7 +69,6 @@ class Slider
 
 	# Remove a column
 	removeCol: (id)=>
-		@_updateData() # Refresh Data
 		id = id.attr "id" if typeof id is "object"
 
 		index = @colSorted.indexOf id
@@ -80,12 +78,8 @@ class Slider
 				@colData[ @colSorted[1] ].RANGE[0] = 0
 			else
 				return alert "You cannot remove the last column."
-		else if index is (@colSorted.length - 1) # We are removing the last column.
-			@colData[ @colSorted[ @colSorted.length - 2 ] ].RANGE[1] = 1
-		else # We are removing a column in the middle somewhere
-			middle = ((@colData[id].RANGE[1] - @colData[id].RANGE[0]) * 0.5) + @colData[id].RANGE[0]
-			@colData[ @colSorted[ index - 1 ]].RANGE[1] = middle
-			@colData[ @colSorted[ index + 1 ]].RANGE[0] = middle			
+		else # We are removing any other column.
+			@colData[@colSorted[index-1]].RANGE[1] = @colData[id].RANGE[1]		
 
 		delete @colData[id]
 		@_rebuildCols()
