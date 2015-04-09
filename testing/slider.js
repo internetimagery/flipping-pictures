@@ -23,7 +23,6 @@ Slider = (function() {
     this.colData = colData;
     this._deactivateSlider = bind(this._deactivateSlider, this);
     this._activateSlider = bind(this._activateSlider, this);
-    this._uuid = bind(this._uuid, this);
     this.removeCol = bind(this.removeCol, this);
     this.splitCol = bind(this.splitCol, this);
     this._rebuildCols = bind(this._rebuildCols, this);
@@ -31,7 +30,7 @@ Slider = (function() {
     this._scrubVideo = bind(this._scrubVideo, this);
     this.addEvent = bind(this.addEvent, this);
     if (!this.colData) {
-      id = this._uuid();
+      id = _.uniqueId("shot_");
       this.colData = {
         id: {
           CLASS: "default",
@@ -58,7 +57,7 @@ Slider = (function() {
   };
 
   Slider.prototype._scrubVideo = function(e) {
-    var i, len, percent, ref, results, run;
+    var j, len, percent, ref, results, run;
     percent = (e.pageX - this.sliderLocation.left) / this.sliderLocation.width;
     if (percent > 1) {
       percent = 1;
@@ -68,71 +67,71 @@ Slider = (function() {
     }
     ref = this.events["scrub"];
     results = [];
-    for (i = 0, len = ref.length; i < len; i++) {
-      run = ref[i];
+    for (j = 0, len = ref.length; j < len; j++) {
+      run = ref[j];
       results.push(run(percent));
     }
     return results;
   };
 
   Slider.prototype._updateData = function(e) {
-    var i, len, ref, results, run;
-    this.slider.find("td").each((function(_this) {
-      return function(index, el) {
-        var end, id, start;
-        id = $(el).attr("id");
-        start = $(el).offset().left - _this.sliderLocation.left;
-        end = ($(el).width() + start) / _this.sliderLocation.width;
-        if (start) {
-          start = start / _this.sliderLocation.width;
-        }
-        if (start < 0) {
-          start = 0;
-        }
-        if (end > 1) {
-          end = 1;
-        }
-        return _this.colData[id].RANGE = [start, end];
-      };
-    })(this));
-    ref = this.events["update"];
+    var col, columns, freshData, i, id, j, k, lastLoc, len, len1, px, ref, ref1, results, run;
+    lastLoc = 0;
+    freshData = {};
+    this.colSorted = [];
+    columns = $(this.slider).find("td");
+    for (j = 0, len = columns.length; j < len; j++) {
+      col = columns[j];
+      id = $(col).attr("id");
+      freshData[id] = $.extend({}, this.colData[id]);
+      freshData[id].RANGE[0] = lastLoc;
+      lastLoc += $(col).width();
+      freshData[id].RANGE[1] = lastLoc;
+      this.colSorted.push(id);
+    }
+    for (id in freshData) {
+      col = freshData[id];
+      ref = col.RANGE;
+      for (i in ref) {
+        px = ref[i];
+        col.RANGE[i] = px / lastLoc;
+      }
+    }
+    this.colData = freshData;
+    ref1 = this.events["update"];
     results = [];
-    for (i = 0, len = ref.length; i < len; i++) {
-      run = ref[i];
+    for (k = 0, len1 = ref1.length; k < len1; k++) {
+      run = ref1[k];
       results.push(run(this.colData));
     }
     return results;
   };
 
   Slider.prototype._rebuildCols = function() {
-    var column, i, id, len, margin, ref, sliderInternal, sort;
+    var column, id, j, k, len, len1, map, margin, rangeMap, ref, ref1, sliderInternal, val;
     this._deactivateSlider();
     sliderInternal = this.slider.find("tr");
     sliderInternal.html("");
-    margin = this.colMargin / this.sliderLocation.width;
+    margin = (this.colMargin * 2) / this.sliderLocation.width;
+    rangeMap = _.map(this.colData, function(value, key, list) {
+      return value.RANGE[1];
+    });
+    rangeMap = _.sortBy(rangeMap);
     this.colSorted = [];
-    sort = (function(_this) {
-      return function(lastIndex) {
-        var key, ref, ref1, results, val;
-        ref = _this.colData;
-        results = [];
-        for (key in ref) {
-          val = ref[key];
-          if ((lastIndex <= (ref1 = val.RANGE[0]) && ref1 < (lastIndex + margin))) {
-            _this.colSorted.push(key);
-            results.push(sort(val.RANGE[1]));
-          } else {
-            results.push(void 0);
-          }
+    for (j = 0, len = rangeMap.length; j < len; j++) {
+      map = rangeMap[j];
+      ref = this.colData;
+      for (id in ref) {
+        val = ref[id];
+        if (val.RANGE[1] === map) {
+          this.colSorted.push(id);
         }
-        return results;
-      };
-    })(this);
-    sort(0);
-    ref = this.colSorted;
-    for (i = 0, len = ref.length; i < len; i++) {
-      id = ref[i];
-      column = $("<td></td>").addClass(data[id].CLASS).css(data[id].CSS).html(data[id].CONTENT).attr("id", id).width((data[id].RANGE[1] - data[id].RANGE[0]) * this.sliderLocation.width);
+      }
+    }
+    ref1 = this.colSorted;
+    for (k = 0, len1 = ref1.length; k < len1; k++) {
+      id = ref1[k];
+      column = $("<td></td>").addClass(this.colData[id].CLASS).css(this.colData[id].CSS).html(this.colData[id].CONTENT).attr("id", id).width((this.colData[id].RANGE[1] - this.colData[id].RANGE[0]) * this.sliderLocation.width);
       sliderInternal.append(column);
     }
     return this._activateSlider();
@@ -140,6 +139,7 @@ Slider = (function() {
 
   Slider.prototype.splitCol = function(parent, data) {
     var baseRange, col, id, multiplier, previous, segment;
+    this._updateData();
     if (typeof parent === "object") {
       parent = parent.attr("id");
     }
@@ -160,21 +160,27 @@ Slider = (function() {
   };
 
   Slider.prototype.removeCol = function(id) {
+    var index, middle;
+    this._updateData();
     if (typeof id === "object") {
       id = id.attr("id");
     }
+    index = this.colSorted.indexOf(id);
+    if (!index) {
+      if (this.colSorted.length > 1) {
+        this.colData[this.colSorted[1]].RANGE[0] = 0;
+      } else {
+        return alert("You cannot remove the last column.");
+      }
+    } else if (index === (this.colSorted.length - 1)) {
+      this.colData[this.colSorted[this.colSorted.length - 2]].RANGE[1] = 1;
+    } else {
+      middle = ((this.colData[id].RANGE[1] - this.colData[id].RANGE[0]) * 0.5) + this.colData[id].RANGE[0];
+      this.colData[this.colSorted[index - 1]].RANGE[1] = middle;
+      this.colData[this.colSorted[index + 1]].RANGE[0] = middle;
+    }
     delete this.colData[id];
     return this._rebuildCols();
-  };
-
-  Slider.prototype._uuid = function() {
-    var id;
-    id = _.uniqueId("shot_");
-    if (_.findKey(this.colData, id)) {
-      id = this.uuid();
-    }
-    this.colData[id] = {};
-    return id;
   };
 
   Slider.prototype._activateSlider = function() {
@@ -185,7 +191,9 @@ Slider = (function() {
       draggingClass: "grip-drag",
       onDrag: this._scrubVideo,
       onResize: this._updateData,
-      minWidth: this.colMargin
+      minWidth: this.colMargin,
+      hoverCursor: "col-resize",
+      headerOnly: true
     });
   };
 

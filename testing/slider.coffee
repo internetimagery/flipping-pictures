@@ -22,7 +22,7 @@ class Slider
 		# }
 	constructor: (slider, @colData)->
 		if not @colData
-			id = @_uuid()
+			id = _.uniqueId "shot_"
 			@colData =
 				id:
 					CLASS : "default"
@@ -57,20 +57,24 @@ class Slider
 
 	# Fire event when scrubbing stops and data is updated
 	_updateData: (e)=>
-		@slider.find "td"
-		.each (index, el)=> # For each column in the slider calculate new range value
-			id = $(el).attr "id"
-			start = $(el).offset().left - @sliderLocation.left
-			end = ($(el).width() + start) / @sliderLocation.width
-
-			start = start / @sliderLocation.width if start # Ensure we're not dividing by zero
-
-			# Clamp between 0 and 1
-			start = 0 if start < 0
-			end = 1 if end > 1
-
-			# Store new Range values
-			@colData[id].RANGE = [start, end]
+		lastLoc = 0 # Previous location
+		freshData = {} # Refreshing data
+		@colSorted = [] # Refreshing column sort
+		columns = $(@slider).find "td"
+		# Set all ranges as raw pixels
+		for col in columns
+			id = $(col).attr "id"
+			freshData[id] = $.extend({}, @colData[id]) # Copy existing data across
+			freshData[id].RANGE[0] = lastLoc
+			lastLoc += $(col).width()
+			freshData[id].RANGE[1] = lastLoc
+			@colSorted.push id # Update sorted columns
+		# Turn ranges into percentages
+		for id, col of freshData
+			for i, px of col.RANGE
+				col.RANGE[i] = px / lastLoc
+		# Replace existing data with up to date data
+		@colData = freshData
 		run(@colData) for run in @events["update"]
 
 	# Rebuild all collumns based on current data TODO: add ordering check to columns via range
@@ -80,30 +84,33 @@ class Slider
 		sliderInternal = @slider.find "tr"
 		sliderInternal.html("") # Clear out existing columns
 
-		margin = @colMargin / @sliderLocation.width # Minimum size as percentage
+		margin = (@colMargin * 2) / @sliderLocation.width # Minimum size as percentage
 
-		@colSorted = []
-		sort = (lastIndex)=> # Sort columns in order
-			for key, val of @colData
-			#	console.log "index: #{lastIndex}, magin: #{margin}"
-				if lastIndex <= val.RANGE[0] < (lastIndex + margin) 
-					@colSorted.push key
-					sort val.RANGE[1]
-		sort 0
+		rangeMap = _.map @colData, (value, key, list)-> # Map the ranges
+			return value.RANGE[1]
+		rangeMap = _.sortBy rangeMap # Sort the ranges
+
+		@colSorted = [] # Reset sorted col
+		for map in rangeMap # Sort by range
+			for id, val of @colData
+				if val.RANGE[1] is map
+					@colSorted.push id
+
 		# Build columns
 		for id in @colSorted
 			column = $("<td></td>")
-			.addClass data[id].CLASS
-			.css data[id].CSS
-			.html data[id].CONTENT
+			.addClass @colData[id].CLASS
+			.css @colData[id].CSS
+			.html @colData[id].CONTENT
 			.attr "id", id
-			.width ((data[id].RANGE[1] - data[id].RANGE[0]) * @sliderLocation.width)
+			.width ((@colData[id].RANGE[1] - @colData[id].RANGE[0]) * @sliderLocation.width)
 			sliderInternal.append column
 
 		@_activateSlider() # Restart Slider
 
 	# Divide an existing column to add a new one in the same section
 	splitCol: (parent, data)=>
+		@_updateData() # Refresh Data
 		parent = parent.attr "id" if typeof parent is "object" # Grab the ID if given an element, else assume string is id
 
 		multiplier = 0.5 / _.size data # How many columns are we adding? How much do we split em?
@@ -124,19 +131,25 @@ class Slider
 
 	# Remove a column
 	removeCol: (id)=>
+		@_updateData() # Refresh Data
 		id = id.attr "id" if typeof id is "object"
+
+		index = @colSorted.indexOf id
+
+		if not index # We are removing the first column.
+			if @colSorted.length > 1
+				@colData[ @colSorted[1] ].RANGE[0] = 0
+			else
+				return alert "You cannot remove the last column."
+		else if index is (@colSorted.length - 1) # We are removing the last column.
+			@colData[ @colSorted[ @colSorted.length - 2 ] ].RANGE[1] = 1
+		else # We are removing a column in the middle somewhere
+			middle = ((@colData[id].RANGE[1] - @colData[id].RANGE[0]) * 0.5) + @colData[id].RANGE[0]
+			@colData[ @colSorted[ index - 1 ]].RANGE[1] = middle
+			@colData[ @colSorted[ index + 1 ]].RANGE[0] = middle			
 
 		delete @colData[id]
 		@_rebuildCols()
-
-	# Generate a unique ID for columns.
-	_uuid: =>
-		id = _.uniqueId "shot_"
-		# If the id exists already.
-		if _.findKey @colData, id
-			id = @uuid()
-		@colData[id] = {}
-		return id
 
 	# Activate Slider functionality.
 	_activateSlider: =>
@@ -148,6 +161,8 @@ class Slider
 			onDrag: @_scrubVideo
 			onResize: @_updateData
 			minWidth: @colMargin
+			hoverCursor: "col-resize"
+			headerOnly: true
 	# Disable slider functionality for slider modification
 	_deactivateSlider: =>
 		@slider.colResizable disable: true 
