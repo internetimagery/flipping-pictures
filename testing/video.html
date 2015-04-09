@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Vimeo player test</title>
+	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css"></link>
+	<style>
+		#output{
+			width: 500px;
+			background: lightgrey;
+			position: absolute;
+			right: 0px;
+			top: 0px;
+		}
+	</style>
+</head>
+<body>
+	<div id="video"></div>
+
+	<pre id="output"></pre>
+
+	<script type="text/javascript" src="../bower_components/jquery/dist/jquery.js"></script>
+	<script type="text/javascript" src="../bower_components/vimeo-player-api/javascript/froogaloop.js"></script>
+	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
+	<script src="video.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" charset="utf-8">
+		var player = new Video("#video");
+		jQuery(document).ready(function($) {
+			player.loadVideo("https://vimeo.com/116549926", "vimeo");
+		});
+	</script>
+</body>
+</html>
