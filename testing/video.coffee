@@ -1,30 +1,60 @@
 # Create a video player that can be modified.
-# Requires vimeo-player-api, js-url
+# Requires vimeo-player-api, underscore
 class Video
-	sourceUrl: "" # Originial URL
-	activeUrl: "" # Modified URL in use
-	videoID: ""   # The id of the video in use
-
 	vendor: "" # Which video provider are we using?
+	videoDuration: 0 # How long is the video in total?
+	aspectRatio: 0 # Ratio to keep the video size correct
 
 	# Set up an empty iframe for video
-	constructor: (selector)->
-		@playerParent = $(selector)
-		@player = $("<iframe frameborder=\"0\"></iframe>").appendTo(@playerParent)
-		@player.attr "id", _.uniqueId "player_"
+	constructor: (source, url, callback)->
+		@player = $(source)
+		@path = @_parseURL url
 
-	# Load a new video into the player ONLY VIMEO is supported at the moment
-	loadVideo: (url)=>
-		path = @_parseURL url
-		if path.host.match(/vimeo.com/) and path.path?
+		if @path.host.match(/vimeo.com/) and @path.path?
 			@vendor = "vimeo"
-			id = @player.attr "id"
-			url = "https://player.vimeo.com/video/#{path.path}?api=1&player_id=#{id}"
-			console.log url
+			@_loadVimeo(callback)
 
-	_activateVideo: =>
-		if @activeUrl
-			@player.attr "src", @activeUrl
+	# Scrub to a specific frame.
+	scrub: (time)=>
+		if 0 < time < @videoDuration
+			if @vendor = "vimeo"
+				@vimeoAPI.api('seekTo', time);
+				@vimeoAPI.api('pause');
+
+	# Load up a VIMEO player
+	_loadVimeo: (callback)->
+		id = _.uniqueId "player_" # Generate an ID
+		url = "https://vimeo.com/api/oembed.json" # Base url
+		params =
+			url: @path.source
+			api: true
+			player_id: id
+			portrait: false
+			title: false
+			byline: false
+
+		# get video information
+		$.get url, params, (data)=>
+			# Size up our video
+			@aspectRatio = data.height / data.width # Grab the aspect ratio
+			@videoDuration = data.duration
+			@playerFrame = $(data.html).appendTo(@player) # Add Iframe player
+			@playerFrame.attr "id", id
+			@_resize()
+			@player.resize @_resize # Continue to resize dynamically
+			$("#output").text( JSON.stringify( data, null, "   " ))
+			@vimeoAPI = $f @playerFrame[0]
+			@vimeoAPI.addEvent "ready", (event, element)=>
+				callback()
+
+
+	# Resize player to match width
+	_resize: =>
+		height = @player.width() * @aspectRatio
+		@playerFrame.width( @player.width() )
+		@playerFrame.height( height )
+		@player.height( height )
+
 
 	# Utility for parsing URL's
 	_parseURL: (url)->

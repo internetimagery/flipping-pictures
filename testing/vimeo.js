@@ -22,7 +22,7 @@ var removeCol = function(e){
 	prev.css("width", prev.css("width") + half + "px");
 	next.css("width", next.css("width") + half + "px");
 	activateSlider();
-}
+};
 
 // Adding a new section, and rebuilding colResizable
 var splitCol = function(e){
@@ -39,7 +39,7 @@ var splitCol = function(e){
 	id = uuid();
 	newTD.attr('id', id);
 	activateSlider();
-}
+};
 
 // Build a new collumn
 var addCol = function(element, data){
@@ -48,7 +48,7 @@ var addCol = function(element, data){
 	for(var key in data){
 		concat += key + ":" + data[key] + ";";
 	}
-	var tag = '<td style="'+concat+'"><span class="add"> NEW </span> | <span class="del"> DEL </span></td>';
+	tag = '<td style="'+concat+'"><span class="add"> NEW </span> | <span class="del"> DEL </span></td>';
 	// If a TD tag, make new item alongside it
 	if(element.tagName === "TD" || element[0].tagName === "TD"){
 		$(element).after(tag);
@@ -60,18 +60,18 @@ var addCol = function(element, data){
 	buildClick(newElement);
 	sliderStop(); // TEMP!! output data
 	return newElement;
-}
+};
 
 // Generate unique ID
 var uuid = function(id){
 	if(id && _.findKey(shotInfo, id)){ return id; }
-	var id = _.uniqueId("shot_");
+	id = _.uniqueId("shot_");
 	if(_.findKey(shotInfo, id)){
 		id = uuid();
 	}
 	shotInfo[id] = {};
 	return id;
-}
+};
 
 // build click event into slider
 var buildClick = function(slider){
@@ -79,7 +79,7 @@ var buildClick = function(slider){
 	var del = $(slider).children('.del')[0];
 	$(add).click( splitCol );
 	$(del).click( removeCol );
-}
+};
 
 // Live data when sliding
 var sliderDrag = function(e){
@@ -88,7 +88,7 @@ var sliderDrag = function(e){
 	var seekVid = videoDuration * percent;
 	froogaloop.api('seekTo', seekVid);
 	froogaloop.api('pause');
-}
+};
 // Update data when sliding stops
 var sliderStop = function(e){
 	slider.find("td").each(function(index, el) {
@@ -96,23 +96,23 @@ var sliderStop = function(e){
 		id = $(el).attr('id');
 		value = $(el).width();
 		percent = frameSize / value;
-		shotInfo[id] = { location : percent }
+		shotInfo[id] = { location : percent };
 	});
 
 	$("#output").text( JSON.stringify(shotInfo, null, "  ") );
-}
+};
 // Activate slider on section
 var activateSlider = function(){
 	slider.colResizable({
 		liveDrag: true,
 		fixed: true,
-		gripInnerHtml:"<div class='grip'></div>", 
+		gripInnerHtml:"<div class='grip'></div>",
 		draggingClass:"dragging",
 		onDrag: sliderDrag,
 		onResize: sliderStop,
 		minWidth: 8
 	});
-}
+};
 
 // Build up the slider from data
 var buildSlider = function(parent, data){
@@ -120,12 +120,12 @@ var buildSlider = function(parent, data){
 	for (var i = data.length - 1; i >= 0; i--) {
 		var id;
 		newcol = addCol( newcol, data[i]["style"] );
-		if(data[i].id){ id = data[i].id } else { id = uuid(); }
+		if(data[i].id){ id = data[i].id; } else { id = uuid(); }
 		$(newcol).attr('id', id);
 		shotInfo[id] = {};
 	}
 	activateSlider();
-}
+};
 
 // START!
 jQuery(document).ready(function($) {
@@ -134,7 +134,9 @@ jQuery(document).ready(function($) {
 	// Set up vimeo player when ready
 	var playerID = $("#player")[0];
 	$f(playerID).addEvent("ready", function(event, element){
+		console.log("here");
 		froogaloop = $f(playerID);
+		console.log(froogaloop);
 		froogaloop.api('getDuration', function (value, player_id) {
 			videoDuration = value;
 			buildSlider($("#slider>tbody>tr"), cols);

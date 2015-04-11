@@ -13,10 +13,16 @@
 			right: 0px;
 			top: 0px;
 		}
+		#video{
+			width: 500px;
+			height: 400px;
+			background: lightblue;
+		}
 	</style>
 </head>
 <body>
 	<div id="video"></div>
+	<button id="button">CLICK HERE</button>
 
 	<pre id="output"></pre>
 
@@ -25,9 +31,14 @@
 	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
 	<script src="video.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/javascript" charset="utf-8">
-		var player = new Video("#video");
 		jQuery(document).ready(function($) {
-			player.loadVideo("https://vimeo.com/116549926", "vimeo");
+		var player = new Video("#video", "https://vimeo.com/116549926", function(){
+			console.log("started");
+		} );
+		$("#button").click(function(event) {
+			player.scrub(10);
+		});
+
 		});
 	</script>
 </body>
