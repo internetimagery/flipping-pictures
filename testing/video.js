@@ -49,7 +49,6 @@ Video = (function() {
         _this.playerFrame.attr("id", id);
         _this._resize();
         _this.player.resize(_this._resize);
-        $("#output").text(JSON.stringify(data, null, "   "));
         _this.vimeoAPI = $f(_this.playerFrame[0]);
         return _this.vimeoAPI.addEvent("ready", function(event, element) {
           return callback();

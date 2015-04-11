@@ -42,7 +42,6 @@ class Video
 			@playerFrame.attr "id", id
 			@_resize()
 			@player.resize @_resize # Continue to resize dynamically
-			$("#output").text( JSON.stringify( data, null, "   " ))
 			@vimeoAPI = $f @playerFrame[0]
 			@vimeoAPI.addEvent "ready", (event, element)=>
 				callback()

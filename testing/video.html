@@ -22,7 +22,8 @@
 </head>
 <body>
 	<div id="video"></div>
-	<button id="button">CLICK HERE</button>
+	<button id="button">Scrub to...</button>
+	<input id="input" type="text"></input>
 
 	<pre id="output"></pre>
 
@@ -31,12 +32,17 @@
 	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
 	<script src="video.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/javascript" charset="utf-8">
+		//$("button").hide();
 		jQuery(document).ready(function($) {
 		var player = new Video("#video", "https://vimeo.com/116549926", function(){
-			console.log("started");
-		} );
+			$("#output").text( "Video Loaded!");
+		});
 		$("#button").click(function(event) {
-			player.scrub(10);
+			var time = +$("#input").val().match(/[\d\.]+/)[0];
+			if (time){
+				$("#output").text("Scrubbing to " + time);
+				player.scrub(time);
+			}
 		});
 
 		});
