@@ -43,17 +43,10 @@ Video = (function() {
       url: this.path.source,
       format: "json"
     };
-    return $.get("http://query.yahooapis.com/v1/public/yql", {
-      q: "select * from json where url = \"" + url + "?" + ($.param(params)) + "\"",
-      format: "json"
-    }, function(data) {
-      var result;
-      if (data.query.results) {
-        result = data.query.results.json;
-        $("#output").text(JSON.stringify(result, null, "    "));
-        return console.log("youtube not yet supported");
-      }
+    this._crossDomainLoad(url + "?" + ($.param(params)), function(result) {
+      return $("#output").text(JSON.stringify(result, null, "    "));
     });
+    return console.log("youtube not yet supported");
   };
 
   Video.prototype._loadVimeo = function(callback) {
@@ -105,6 +98,17 @@ Video = (function() {
       query: dom.search.substr(dom.search.indexOf("?") + 1),
       hash: dom.hash.substr(dom.hash.indexOf("#"))
     };
+  };
+
+  Video.prototype._crossDomainLoad = function(url, callback) {
+    return $.get("http://query.yahooapis.com/v1/public/yql", {
+      q: "select * from json where url = \"" + url + "\"",
+      format: "json"
+    }, function(data) {
+      if (data.query.results) {
+        return callback(data.query.results.json);
+      }
+    });
   };
 
   return Video;

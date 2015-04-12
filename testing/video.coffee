@@ -34,15 +34,11 @@ class Video
 		params =
 			url: @path.source
 			format: "json"
-		$.get "http://query.yahooapis.com/v1/public/yql", {
-			q: "select * from json where url = \"#{url}?#{$.param(params)}\""
-			format: "json"
-			}, (data)->
-				if data.query.results
-					result = data.query.results.json # Got our results. Lawl!
-					$("#output").text JSON.stringify(result, null, "    ")
 
-					console.log "youtube not yet supported"
+		@_crossDomainLoad "#{url}?#{$.param(params)}", (result)->
+			$("#output").text JSON.stringify(result, null, "    ")
+		
+		console.log "youtube not yet supported"
 
 	# Load up a VIMEO player
 	_loadVimeo: (callback)->
@@ -90,6 +86,14 @@ class Video
 			query : dom.search.substr dom.search.indexOf( "?" ) + 1
 			hash : dom.hash.substr dom.hash.indexOf "#"
 		}
+	# Load json across domains. Sneaky...
+	_crossDomainLoad: (url, callback)->
+		$.get "http://query.yahooapis.com/v1/public/yql", {
+			q: "select * from json where url = \"#{url}\""
+			format: "json"
+		}, (data)->
+			if data.query.results
+				callback data.query.results.json
 
 
 
