@@ -16,6 +16,10 @@ Video = (function() {
     this.player = $(source);
     this.path = this._parseURL(url);
     this.player.html("");
+    if (this.path.scheme === "https") {
+      this.path.scheme = "http";
+      this.path.source = this.path.source.replace(/^https?/, "http");
+    }
     if (this.path.host.match(/vimeo.com/) && (this.path.path != null)) {
       this.vendor = "vimeo";
       this._loadVimeo(callback);
@@ -43,16 +47,24 @@ Video = (function() {
       url: this.path.source,
       format: "json"
     };
-    this._crossDomainLoad(url + "?" + ($.param(params)), function(result) {
-      return $("#output").text(JSON.stringify(result, null, "    "));
-    });
+    this._crossDomainLoad(url + "?" + ($.param(params)), (function(_this) {
+      return function(data) {
+        _this.aspectRatio = data.height / data.width;
+        _this.playerFrame = $(data.html).appendTo(_this.player);
+        _this.playerFrame.attr("id", id);
+        _this._resize();
+        _this.player.resize(_this._resize);
+        $("#output").text(JSON.stringify(data, null, "    "));
+        return callback();
+      };
+    })(this));
     return console.log("youtube not yet supported");
   };
 
   Video.prototype._loadVimeo = function(callback) {
     var id, params, url;
     id = _.uniqueId("player_");
-    url = "https://vimeo.com/api/oembed.json";
+    url = "http://vimeo.com/api/oembed.json";
     params = {
       url: this.path.source,
       api: true,

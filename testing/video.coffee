@@ -11,6 +11,9 @@ class Video
 		@player = $(source)
 		@path = @_parseURL url
 		@player.html "" # Clear anything from the frame
+		if @path.scheme is "https"
+			@path.scheme = "http"
+			@path.source = @path.source.replace(/^https?/, "http")
 
 		if @path.host.match(/vimeo.com/) and @path.path?
 			@vendor = "vimeo"
@@ -35,15 +38,21 @@ class Video
 			url: @path.source
 			format: "json"
 
-		@_crossDomainLoad "#{url}?#{$.param(params)}", (result)->
-			$("#output").text JSON.stringify(result, null, "    ")
+		@_crossDomainLoad "#{url}?#{$.param(params)}", (data)=>
+			@aspectRatio = data.height / data.width # Aspect ratio
+			@playerFrame = $(data.html).appendTo(@player) # Add player element
+			@playerFrame.attr "id", id
+			@_resize()
+			@player.resize @_resize
+			$("#output").text JSON.stringify(data, null, "    ")
+			callback()
 		
 		console.log "youtube not yet supported"
 
 	# Load up a VIMEO player
 	_loadVimeo: (callback)->
 		id = _.uniqueId "player_" # Generate an ID
-		url = "https://vimeo.com/api/oembed.json" # Base url
+		url = "http://vimeo.com/api/oembed.json" # Base url
 		params =
 			url: @path.source
 			api: true
