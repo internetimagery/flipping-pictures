@@ -15,16 +15,21 @@
 		}
 		#video{
 			width: 500px;
-			height: 400px;
+			height: 200px;
 			background: lightblue;
 		}
 	</style>
 </head>
 <body>
 	<div id="video"></div>
-	<button id="button">Scrub to...</button>
-	<input id="input" type="text"></input>
-
+	<div>
+		<button id="load">Load url</button>
+		<input id="url" type="text"></input>
+	</div>
+	<div>
+		<button id="scrub">Scrub to...</button>
+		<input id="time" type="text"></input>
+	</div>
 	<pre id="output"></pre>
 
 	<script type="text/javascript" src="../bower_components/jquery/dist/jquery.js"></script>
@@ -32,18 +37,26 @@
 	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
 	<script src="video.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/javascript" charset="utf-8">
-		//$("button").hide();
-		jQuery(document).ready(function($) {
-		var player = new Video("#video", "https://vimeo.com/116549926", function(){
-			$("#output").text( "Video Loaded!");
+		var output = function(text){
+			$("#output").text(text);
+		};
+		var player = null;
+		$("#load").click(function(event) {
+			var url = $("#url").val();
+			output("Attempting to load: " + url);
+			player = new Video( "#video", url, function(){
+				output("Video Loaded!");
+			});
 		});
-		$("#button").click(function(event) {
-			var time = +$("#input").val().match(/[\d\.]+/)[0];
-			if (time){
-				$("#output").text("Scrubbing to " + time);
+		$("#scrub").click(function(event) {
+			var time = +$("#time").val().match(/[\d\.]+/)[0];
+			if(time){
+				output("Moving to time: " + time);
 				player.scrub(time);
 			}
 		});
+
+		jQuery(document).ready(function($) {
 
 		});
 	</script>

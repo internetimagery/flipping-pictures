@@ -9,6 +9,7 @@ class Video
 	constructor: (source, url, callback)->
 		@player = $(source)
 		@path = @_parseURL url
+		@player.html "" # Clear anything from the frame
 
 		if @path.host.match(/vimeo.com/) and @path.path?
 			@vendor = "vimeo"

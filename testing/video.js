@@ -14,6 +14,7 @@ Video = (function() {
     this.scrub = bind(this.scrub, this);
     this.player = $(source);
     this.path = this._parseURL(url);
+    this.player.html("");
     if (this.path.host.match(/vimeo.com/) && (this.path.path != null)) {
       this.vendor = "vimeo";
       this._loadVimeo(callback);
