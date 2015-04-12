@@ -1,3 +1,4 @@
+"use strict";
 # Initialize the slider
 # Requres: colResizable, underscorejs, jquery
 

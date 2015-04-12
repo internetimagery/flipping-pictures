@@ -1,3 +1,4 @@
+"use strict";
 # Create a video player that can be modified.
 # Requires vimeo-player-api, underscore
 class Video
@@ -32,8 +33,16 @@ class Video
 		url = "http://www.youtube.com/oembed"
 		params =
 			url: @path.source
-		console.log "youtube not yet supported"
+			format: "json"
+		$.get "http://query.yahooapis.com/v1/public/yql", {
+			q: "select * from json where url = \"#{url}?#{$.param(params)}\""
+			format: "json"
+			}, (data)->
+				if data.query.results
+					result = data.query.results.json # Got our results. Lawl!
+					$("#output").text JSON.stringify(result, null, "    ")
 
+					console.log "youtube not yet supported"
 
 	# Load up a VIMEO player
 	_loadVimeo: (callback)->
