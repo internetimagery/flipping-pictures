@@ -15,12 +15,22 @@ class Video
 			@vendor = "vimeo"
 			@_loadVimeo(callback)
 
+		if @path.host.match(/youtu.?be/) and @path.path?
+			@vendor = "youtube"
+			@_loadYoutube(callback)
+
 	# Scrub to a specific frame.
 	scrub: (time)=>
 		if 0 < time < @videoDuration
 			if @vendor = "vimeo"
 				@vimeoAPI.api('seekTo', time);
 				@vimeoAPI.api('pause');
+
+	# Load YOUTUBE player
+	_loadYoutube: (callback)->
+		id = _.uniqueId "player_" # Generate an ID
+		console.log "youtube"
+
 
 	# Load up a VIMEO player
 	_loadVimeo: (callback)->
@@ -46,7 +56,6 @@ class Video
 			@vimeoAPI = $f @playerFrame[0]
 			@vimeoAPI.addEvent "ready", (event, element)=>
 				callback()
-
 
 	# Resize player to match width
 	_resize: =>

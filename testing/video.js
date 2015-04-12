@@ -19,6 +19,10 @@ Video = (function() {
       this.vendor = "vimeo";
       this._loadVimeo(callback);
     }
+    if (this.path.host.match(/youtu.?be/) && (this.path.path != null)) {
+      this.vendor = "youtube";
+      this._loadYoutube(callback);
+    }
   }
 
   Video.prototype.scrub = function(time) {
@@ -28,6 +32,12 @@ Video = (function() {
         return this.vimeoAPI.api('pause');
       }
     }
+  };
+
+  Video.prototype._loadYoutube = function(callback) {
+    var id;
+    id = _.uniqueId("player_");
+    return console.log("youtube");
   };
 
   Video.prototype._loadVimeo = function(callback) {
