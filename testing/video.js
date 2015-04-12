@@ -35,9 +35,13 @@ Video = (function() {
   };
 
   Video.prototype._loadYoutube = function(callback) {
-    var id;
+    var id, params, url;
     id = _.uniqueId("player_");
-    return console.log("youtube");
+    url = "http://www.youtube.com/oembed";
+    params = {
+      url: this.path.source
+    };
+    return console.log("youtube not yet supported");
   };
 
   Video.prototype._loadVimeo = function(callback) {

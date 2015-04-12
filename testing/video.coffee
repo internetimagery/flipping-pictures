@@ -29,7 +29,10 @@ class Video
 	# Load YOUTUBE player
 	_loadYoutube: (callback)->
 		id = _.uniqueId "player_" # Generate an ID
-		console.log "youtube"
+		url = "http://www.youtube.com/oembed"
+		params =
+			url: @path.source
+		console.log "youtube not yet supported"
 
 
 	# Load up a VIMEO player
