@@ -11,7 +11,7 @@ class Video
 	constructor: (@source)->
 		@update = false
 
-	load: (url, callback)=>
+	load: (url)=>
 		youtube = url.match /http[s]?:\/\/(?:[^\.]+\.)*(?:youtube\.com\/(?:v\/|watch\?(?:.*?\&)?v=|embed\/)|youtu.be\/)([\w\-\_]+)/i
 		if youtube? and youtube[1].length is 11
 			@vendor = "youtube"
@@ -23,6 +23,15 @@ class Video
 			videoID = vimeo[3]
 			vimeoPlayer = null
 
+		reg = /(?:dailymotion\.com(?:\/video|\/hub)|dai\.ly)\/([0-9a-z]+)(?:[\-_0-9a-zA-Z]+#video=([a-z0-9]+))?/g
+		dailymotion = reg.exec url
+		if dailymotion?
+			@vendor = "dailymotion"
+			if dailymotion[2]
+				videoID = dailymotion[2]
+			else
+				videoID = dailymotion[1]
+
 		if @vendor
 			if @update
 				$.ovoplayer.update {
@@ -31,16 +40,15 @@ class Video
 				}
 			else
 				@update = true
-				$.ovoplayer {
+				$.ovoplayer.init {
 					id: @source
 					type: @vendor
 					code: videoID
 					debug: true
 					callback: (player)->
-						console.log "CALLED BACK"
-						callback()
+						# Calls back on update. ugh
+						console.log "Updated video."
 					}
-
 
 	# Player controls
 	play: ->

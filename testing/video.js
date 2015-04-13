@@ -17,8 +17,8 @@ Video = (function() {
     this.update = false;
   }
 
-  Video.prototype.load = function(url, callback) {
-    var videoID, vimeo, vimeoPlayer, youtube;
+  Video.prototype.load = function(url) {
+    var dailymotion, reg, videoID, vimeo, vimeoPlayer, youtube;
     youtube = url.match(/http[s]?:\/\/(?:[^\.]+\.)*(?:youtube\.com\/(?:v\/|watch\?(?:.*?\&)?v=|embed\/)|youtu.be\/)([\w\-\_]+)/i);
     if ((youtube != null) && youtube[1].length === 11) {
       this.vendor = "youtube";
@@ -30,6 +30,16 @@ Video = (function() {
       videoID = vimeo[3];
       vimeoPlayer = null;
     }
+    reg = /(?:dailymotion\.com(?:\/video|\/hub)|dai\.ly)\/([0-9a-z]+)(?:[\-_0-9a-zA-Z]+#video=([a-z0-9]+))?/g;
+    dailymotion = reg.exec(url);
+    if (dailymotion != null) {
+      this.vendor = "dailymotion";
+      if (dailymotion[2]) {
+        videoID = dailymotion[2];
+      } else {
+        videoID = dailymotion[1];
+      }
+    }
     if (this.vendor) {
       if (this.update) {
         return $.ovoplayer.update({
@@ -38,14 +48,13 @@ Video = (function() {
         });
       } else {
         this.update = true;
-        return $.ovoplayer({
+        return $.ovoplayer.init({
           id: this.source,
           type: this.vendor,
           code: videoID,
           debug: true,
           callback: function(player) {
-            console.log("CALLED BACK");
-            return callback();
+            return console.log("Updated video.");
           }
         });
       }

@@ -18,6 +18,9 @@
 			height: 200px;
 			background: lightblue;
 		}
+		#url{
+			width: 400px;
+		}
 	</style>
 </head>
 <body>
@@ -45,16 +48,14 @@
 		$("#load").click(function(event) {
 			var url = $("#url").val();
 			output("Attempting to load: " + url);
-			player.load( url, function(){
-				console.log("hello");
-			} );
+			player.load( url );
 		});
 		$("#scrub").click(function(event) {
 			var time = +$("#time").val().match(/[\d\.]+/)[0];
 			if(time){
 				output("Moving to time: " + time);
 				player.seek(time, true);
-				}
+			}
 		});
 		jQuery(document).ready(function($) {
 			function ohplayer () {
@@ -66,7 +67,7 @@
 				});
 			}
 			$("#url").val("https://www.youtube.com/watch?v=XXdEfWi0ghI");
-			player.load("https://www.youtube.com/watch?v=XXdEfWi0ghI", function(){ console.log("begin"); });
+			player.load("https://www.youtube.com/watch?v=XXdEfWi0ghI");
 			//player();
 		});
 	</script>
