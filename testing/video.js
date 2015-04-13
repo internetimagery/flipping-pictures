@@ -10,86 +10,96 @@ Video = (function() {
 
   Video.prototype.aspectRatio = 0;
 
-  function Video(source, url, callback) {
-    this._resize = bind(this._resize, this);
-    this.scrub = bind(this.scrub, this);
-    this.player = $(source);
-    this.path = this._parseURL(url);
-    this.player.html("");
-    if (this.path.scheme === "https") {
-      this.path.scheme = "http";
-      this.path.source = this.path.source.replace(/^https?/, "http");
-    }
-    if (this.path.host.match(/vimeo.com/) && (this.path.path != null)) {
-      this.vendor = "vimeo";
-      this._loadVimeo(callback);
-    }
-    if (this.path.host.match(/youtu.?be/) && (this.path.path != null)) {
-      this.vendor = "youtube";
-      this._loadYoutube(callback);
-    }
+  function Video(source) {
+    this.source = source;
+    this._resizeDynamic = bind(this._resizeDynamic, this);
+    this.load = bind(this.load, this);
+    this.update = false;
   }
 
-  Video.prototype.scrub = function(time) {
-    if ((0 < time && time < this.videoDuration)) {
-      if (this.vendor = "vimeo") {
-        this.vimeoAPI.api('seekTo', time);
-        return this.vimeoAPI.api('pause');
+  Video.prototype.load = function(url, callback) {
+    var videoID, vimeo, vimeoPlayer, youtube;
+    youtube = url.match(/http[s]?:\/\/(?:[^\.]+\.)*(?:youtube\.com\/(?:v\/|watch\?(?:.*?\&)?v=|embed\/)|youtu.be\/)([\w\-\_]+)/i);
+    if ((youtube != null) && youtube[1].length === 11) {
+      this.vendor = "youtube";
+      videoID = youtube[1];
+    }
+    vimeo = url.match(/(?:https?:\/\/(?:www\.)?)?vimeo.com\/(?:channels\/|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/);
+    if (vimeo != null) {
+      this.vendor = "vimeo";
+      videoID = vimeo[3];
+      vimeoPlayer = null;
+    }
+    if (this.vendor) {
+      if (this.update) {
+        return $.ovoplayer.update({
+          type: this.vendor,
+          code: videoID
+        });
+      } else {
+        this.update = true;
+        return $.ovoplayer({
+          id: this.source,
+          type: this.vendor,
+          code: videoID,
+          debug: true,
+          callback: function(player) {
+            console.log("CALLED BACK");
+            return callback();
+          }
+        });
       }
     }
   };
 
-  Video.prototype._loadYoutube = function(callback) {
-    var id, params, url;
-    id = _.uniqueId("player_");
-    url = "http://www.youtube.com/oembed";
-    params = {
-      url: this.path.source,
-      format: "json"
-    };
-    this._crossDomainLoad(url + "?" + ($.param(params)), (function(_this) {
-      return function(data) {
-        _this.aspectRatio = data.height / data.width;
-        _this.playerFrame = $(data.html).appendTo(_this.player);
-        _this.playerFrame.attr("id", id);
-        _this._resize();
-        _this.player.resize(_this._resize);
-        $("#output").text(JSON.stringify(data, null, "    "));
-        return callback();
-      };
-    })(this));
-    return console.log("youtube not yet supported");
+  Video.prototype.play = function() {
+    return $.ovoplayer.play();
   };
 
-  Video.prototype._loadVimeo = function(callback) {
-    var id, params, url;
-    id = _.uniqueId("player_");
-    url = "http://vimeo.com/api/oembed.json";
-    params = {
-      url: this.path.source,
-      api: true,
-      player_id: id,
-      portrait: false,
-      title: false,
-      byline: false
-    };
-    return $.get(url, params, (function(_this) {
-      return function(data) {
-        _this.aspectRatio = data.height / data.width;
-        _this.videoDuration = data.duration;
-        _this.playerFrame = $(data.html).appendTo(_this.player);
-        _this.playerFrame.attr("id", id);
-        _this._resize();
-        _this.player.resize(_this._resize);
-        _this.vimeoAPI = $f(_this.playerFrame[0]);
-        return _this.vimeoAPI.addEvent("ready", function(event, element) {
-          return callback();
-        });
-      };
-    })(this));
+  Video.prototype.seek = function(time, pause) {
+    return $.ovoplayer.seek(time, function(p, o) {
+      if (pause) {
+        return $.ovoplayer.pause();
+      }
+    });
   };
 
-  Video.prototype._resize = function() {
+  Video.prototype.first = function() {
+    return $.ovoplayer.first();
+  };
+
+  Video.prototype.last = function() {
+    return $.ovoplayer.last();
+  };
+
+  Video.prototype.pause = function() {
+    return $.ovoplayer.pause();
+  };
+
+  Video.prototype.next = function() {
+    return $.ovoplayer.next();
+  };
+
+  Video.prototype.previous = function() {
+    return $.ovoplayer.previous();
+  };
+
+  Video.prototype.repeat = function(toggle) {
+    return $.ovoplayer.repeat(toggle);
+  };
+
+  Video.prototype.repeatAll = function(toggle) {
+    return $.ovoplayer.repeatAll(toggle);
+  };
+
+  Video.prototype._update = function(vendor, videoID) {
+    return $.ovoplayer.update({
+      type: vendor,
+      code: videoID
+    });
+  };
+
+  Video.prototype._resizeDynamic = function() {
     var height;
     height = this.player.width() * this.aspectRatio;
     this.playerFrame.width(this.player.width());
@@ -110,17 +120,6 @@ Video = (function() {
       query: dom.search.substr(dom.search.indexOf("?") + 1),
       hash: dom.hash.substr(dom.hash.indexOf("#"))
     };
-  };
-
-  Video.prototype._crossDomainLoad = function(url, callback) {
-    return $.get("http://query.yahooapis.com/v1/public/yql", {
-      q: "select * from json where url = \"" + url + "\"",
-      format: "json"
-    }, function(data) {
-      if (data.query.results) {
-        return callback(data.query.results.json);
-      }
-    });
   };
 
   return Video;

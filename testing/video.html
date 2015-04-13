@@ -34,7 +34,6 @@
 
 	<script type="text/javascript" src="../bower_components/jquery/dist/jquery.js"></script>
 	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
-	<script type="text/javascript" src="../bower_components/vimeo-player-api/javascript/froogaloop.js"></script>
 	<script type="text/javascript" src="../bower_components/jquery.ovoplayer/js/jsplayer.js"></script>
 	<script type="text/javascript" src="../bower_components/underscore/underscore.js"></script>
 	<script src="video.js" type="text/javascript" charset="utf-8"></script>
@@ -42,20 +41,33 @@
 		var output = function(text){
 			$("#output").text(text);
 		};
-		var player = null;
+		var player = new Video("#video");
 		$("#load").click(function(event) {
 			var url = $("#url").val();
 			output("Attempting to load: " + url);
-			player = new Video( "#video", url, function(){
-				output("Video Loaded!");
-			});
+			player.load( url, function(){
+				console.log("hello");
+			} );
 		});
 		$("#scrub").click(function(event) {
 			var time = +$("#time").val().match(/[\d\.]+/)[0];
 			if(time){
 				output("Moving to time: " + time);
-				player.scrub(time);
+				player.seek(time, true);
+				}
+		});
+		jQuery(document).ready(function($) {
+			function ohplayer () {
+				$.ovoplayer({
+					id: "#video",
+					type: "youtube",
+					code: "XXdEfWi0ghI",
+					debug: true
+				});
 			}
+			$("#url").val("https://www.youtube.com/watch?v=XXdEfWi0ghI");
+			player.load("https://www.youtube.com/watch?v=XXdEfWi0ghI", function(){ console.log("begin"); });
+			//player();
 		});
 	</script>
 </body>

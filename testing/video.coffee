@@ -1,81 +1,78 @@
 "use strict";
 # Create a video player that can be modified.
-# Requires vimeo-player-api, underscore
+# Requires vimeo-player-api, underscore, http://www.youtube.com/iframe_api
+# LOAD function has to run before page completely loaded
 class Video
 	vendor: "" # Which video provider are we using?
 	videoDuration: 0 # How long is the video in total?
 	aspectRatio: 0 # Ratio to keep the video size correct
 
 	# Set up an empty iframe for video
-	constructor: (source, url, callback)->
-		@player = $(source)
-		@path = @_parseURL url
-		@player.html "" # Clear anything from the frame
-		if @path.scheme is "https"
-			@path.scheme = "http"
-			@path.source = @path.source.replace(/^https?/, "http")
+	constructor: (@source)->
+		@update = false
 
-		if @path.host.match(/vimeo.com/) and @path.path?
-			@vendor = "vimeo"
-			@_loadVimeo(callback)
-
-		if @path.host.match(/youtu.?be/) and @path.path?
+	load: (url, callback)=>
+		youtube = url.match /http[s]?:\/\/(?:[^\.]+\.)*(?:youtube\.com\/(?:v\/|watch\?(?:.*?\&)?v=|embed\/)|youtu.be\/)([\w\-\_]+)/i
+		if youtube? and youtube[1].length is 11
 			@vendor = "youtube"
-			@_loadYoutube(callback)
+			videoID = youtube[1]
 
-	# Scrub to a specific frame.
-	scrub: (time)=>
-		if 0 < time < @videoDuration
-			if @vendor = "vimeo"
-				@vimeoAPI.api('seekTo', time);
-				@vimeoAPI.api('pause');
+		vimeo = url.match /(?:https?:\/\/(?:www\.)?)?vimeo.com\/(?:channels\/|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/
+		if vimeo?
+			@vendor = "vimeo"
+			videoID = vimeo[3]
+			vimeoPlayer = null
 
-	# Load YOUTUBE player
-	_loadYoutube: (callback)->
-		id = _.uniqueId "player_" # Generate an ID
-		url = "http://www.youtube.com/oembed"
-		params =
-			url: @path.source
-			format: "json"
+		if @vendor
+			if @update
+				$.ovoplayer.update {
+					type: @vendor
+					code: videoID
+				}
+			else
+				@update = true
+				$.ovoplayer {
+					id: @source
+					type: @vendor
+					code: videoID
+					debug: true
+					callback: (player)->
+						console.log "CALLED BACK"
+						callback()
+					}
 
-		@_crossDomainLoad "#{url}?#{$.param(params)}", (data)=>
-			@aspectRatio = data.height / data.width # Aspect ratio
-			@playerFrame = $(data.html).appendTo(@player) # Add player element
-			@playerFrame.attr "id", id
-			@_resize()
-			@player.resize @_resize
-			$("#output").text JSON.stringify(data, null, "    ")
-			callback()
-		
-		console.log "youtube not yet supported"
 
-	# Load up a VIMEO player
-	_loadVimeo: (callback)->
-		id = _.uniqueId "player_" # Generate an ID
-		url = "http://vimeo.com/api/oembed.json" # Base url
-		params =
-			url: @path.source
-			api: true
-			player_id: id
-			portrait: false
-			title: false
-			byline: false
+	# Player controls
+	play: ->
+		$.ovoplayer.play()
+	seek: (time, pause)->
+		$.ovoplayer.seek time, (p, o)->
+			if pause
+				$.ovoplayer.pause()
+	first: ->
+		$.ovoplayer.first()
+	last: ->
+		$.ovoplayer.last()
+	pause: ->
+		$.ovoplayer.pause()
+	next: ->
+		$.ovoplayer.next()
+	previous: ->
+		$.ovoplayer.previous()
+	repeat: (toggle)->
+		$.ovoplayer.repeat toggle
+	repeatAll: (toggle)->
+		$.ovoplayer.repeatAll toggle
 
-		# get video information
-		$.get url, params, (data)=>
-			# Size up our video
-			@aspectRatio = data.height / data.width # Grab the aspect ratio
-			@videoDuration = data.duration
-			@playerFrame = $(data.html).appendTo(@player) # Add Iframe player
-			@playerFrame.attr "id", id
-			@_resize()
-			@player.resize @_resize # Continue to resize dynamically
-			@vimeoAPI = $f @playerFrame[0]
-			@vimeoAPI.addEvent "ready", (event, element)=>
-				callback()
+	# Update iframe with a new video
+	_update: (vendor, videoID)->
+		$.ovoplayer.update {
+			type: vendor
+			code: videoID
+		}
 
 	# Resize player to match width
-	_resize: =>
+	_resizeDynamic: =>
 		height = @player.width() * @aspectRatio
 		@playerFrame.width( @player.width() )
 		@playerFrame.height( height )
@@ -95,15 +92,6 @@ class Video
 			query : dom.search.substr dom.search.indexOf( "?" ) + 1
 			hash : dom.hash.substr dom.hash.indexOf "#"
 		}
-	# Load json across domains. Sneaky...
-	_crossDomainLoad: (url, callback)->
-		$.get "http://query.yahooapis.com/v1/public/yql", {
-			q: "select * from json where url = \"#{url}\""
-			format: "json"
-		}, (data)->
-			if data.query.results
-				callback data.query.results.json
-
 
 
 
